@@ -22,11 +22,9 @@ public class Restaurante {
     private String telefone;
 
     @OneToMany(mappedBy = "restaurante")
-    @JoinColumn(name = "produtos_id")
     private List<Produto> produtos;
 
     @OneToMany(mappedBy = "restaurante")
-    @JoinColumn(name = "pedidos_id")
     private List<Pedido> pedidos;
 
 }
