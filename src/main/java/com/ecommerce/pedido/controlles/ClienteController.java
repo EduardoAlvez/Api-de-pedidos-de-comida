@@ -1,7 +1,7 @@
 package com.ecommerce.pedido.controlles;
 
 import com.ecommerce.pedido.models.Cliente;
-import com.ecommerce.pedido.repositorys.ClienteRepository;
+import com.ecommerce.pedido.repositories.ClienteRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

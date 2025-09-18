@@ -1,11 +1,16 @@
 package com.ecommerce.pedido.dto;
 
 
-import com.ecommerce.pedido.models.enums.FormaDePagamento;
 import com.ecommerce.pedido.models.enums.FormaPagamento;
 import com.ecommerce.pedido.models.enums.StatusPagamento;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class PagamentoDTO {
 
     private Long id;

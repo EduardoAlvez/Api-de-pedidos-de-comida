@@ -1,4 +1,4 @@
-package com.ecommerce.pedido.repositorys;
+package com.ecommerce.pedido.repositories;
 
 import com.ecommerce.pedido.models.ItemPedido;
 import org.springframework.data.jpa.repository.JpaRepository;

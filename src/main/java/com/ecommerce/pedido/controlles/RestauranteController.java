@@ -1,9 +1,7 @@
 package com.ecommerce.pedido.controlles;
 
-import com.ecommerce.pedido.models.Cliente;
 import com.ecommerce.pedido.models.Restaurante;
-import com.ecommerce.pedido.repositorys.ProdutoRepository;
-import com.ecommerce.pedido.repositorys.RestauranteRepository;
+import com.ecommerce.pedido.repositories.RestauranteRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

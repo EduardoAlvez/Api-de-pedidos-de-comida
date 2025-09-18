@@ -1,6 +1,5 @@
 package com.ecommerce.pedido.dto;
 
-import com.ecommerce.pedido.models.Pedido;
 import com.ecommerce.pedido.models.enums.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -8,9 +7,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
-@Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -26,6 +22,6 @@ public class ClienteDTO {
 
     @Size(min = 6, message = "Senha deve ter pelo menos 6 caracteres")
     private String senha; // pode ser null se for CLIENTE comum
-
+    @NotBlank(message = "RESTAURANTE ou CLIENTE ")
     private Role role;
 }

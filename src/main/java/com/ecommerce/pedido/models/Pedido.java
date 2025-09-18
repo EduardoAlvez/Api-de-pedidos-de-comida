@@ -21,6 +21,7 @@ public class Pedido {
     private Long id;
     private LocalDateTime dataDoPedido;
     private StatusPedido Status;
+    private Double valorTotal;
 
     @ManyToOne
     @JoinColumn(name = "cliente_id")
@@ -33,6 +34,6 @@ public class Pedido {
     private  Pagamento pagamento;
 
     @OneToMany(mappedBy = "pedido")
-    private List<ItemPedido> itemPedidos;
+    private List<ItemPedido> itens;
 
 }
