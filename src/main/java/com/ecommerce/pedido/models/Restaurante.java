@@ -17,6 +17,7 @@ public class Restaurante {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String nome;
     private String endereco;
     private String telefone;
@@ -26,5 +27,10 @@ public class Restaurante {
 
     @OneToMany(mappedBy = "restaurante")
     private List<Pedido> pedidos;
+
+    @OneToOne
+    @JoinColumn(name = "cliente_id", nullable = false, unique = true)
+    private Cliente cliente; // cada restaurante pertence a 1 cliente
+
 
 }

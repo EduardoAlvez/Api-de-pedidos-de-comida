@@ -27,4 +27,8 @@ public class Cliente {
 
     @OneToMany(mappedBy = "cliente")
     private List<Pedido> pedidos;
+
+    @OneToOne(mappedBy = "cliente", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Restaurante restaurante; // dono do restaurante terá 1 restaurante
+
 }
