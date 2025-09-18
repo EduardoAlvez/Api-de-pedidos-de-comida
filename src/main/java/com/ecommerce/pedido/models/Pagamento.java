@@ -1,6 +1,6 @@
 package com.ecommerce.pedido.models;
 
-import com.ecommerce.pedido.models.enums.FormaDePagamento;
+import com.ecommerce.pedido.models.enums.FormaPagamento;
 import com.ecommerce.pedido.models.enums.StatusPagamento;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -23,7 +23,7 @@ public class Pagamento {
     private LocalDateTime dataDoPagamento;
 
     @Enumerated(EnumType.STRING)
-    private FormaDePagamento formaDePagamento;
+    private FormaPagamento formaDePagamento;
     @Enumerated(EnumType.STRING)
     private StatusPagamento status;
 

@@ -1,5 +1,6 @@
 package com.ecommerce.pedido.models;
 
+import com.ecommerce.pedido.models.enums.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,6 +20,10 @@ public class Cliente {
     private String nome;
     private String email;
     private String telefone;
+    private String senha;
+
+    @Enumerated(EnumType.STRING)
+    private Role tipo;
 
     @OneToMany(mappedBy = "cliente")
     private List<Pedido> pedidos;
