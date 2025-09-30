@@ -26,10 +26,10 @@ public class Usuario {
     @Enumerated(EnumType.STRING)
     private Role tipo;
 
-    @OneToMany(mappedBy = "cliente")
+    @OneToMany(mappedBy = "usuario")
     private List<Pedido> pedidos;
 
-    @OneToOne(mappedBy = "cliente", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private Restaurante restaurante; // dono do restaurante terá 1 restaurante
 
 }
