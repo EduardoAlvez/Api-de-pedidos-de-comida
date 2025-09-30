@@ -86,7 +86,6 @@ public class UsuarioService {
         usuarioRepository.deleteById(id);
     }
 
-    // Converte uma Entidade Usuario para um UsuarioResponseDTO
     public UsuarioResponseDTO toResponseDTO(Usuario usuario) {
         UsuarioResponseDTO responseDTO = new UsuarioResponseDTO();
         BeanUtils.copyProperties(usuario, responseDTO);

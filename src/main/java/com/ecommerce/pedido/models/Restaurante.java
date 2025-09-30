@@ -34,7 +34,7 @@ public class Restaurante {
 
     @OneToOne
     @JoinColumn(name = "usuario_id", nullable = false, unique = true)
-    private Usuario usuario; // cada restaurante pertence a 1 cliente
+    private Usuario usuario; // cada restaurante pertence a 1 usuario
 
 
 }
