@@ -24,7 +24,6 @@ public class RestauranteRequestDTO {
 
     @NotBlank(message = "O CNPJ não pode estar em branco.")
     @Pattern(regexp = "\\d{14}", message = "O CNPJ deve conter 14 dígitos numéricos.")
-    @CNPJ
     private String cnpj;
 
     @NotBlank(message = "O tipo de cozinha não pode estar em branco.")
