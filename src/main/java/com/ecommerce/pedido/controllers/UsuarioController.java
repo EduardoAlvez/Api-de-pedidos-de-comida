@@ -2,10 +2,8 @@ package com.ecommerce.pedido.controllers;
 
 import com.ecommerce.pedido.dtos.UsuarioRequestDTO;
 import com.ecommerce.pedido.dtos.UsuarioResponseDTO;
-// import com.ecommerce.pedido.services.UsuarioService; // Vamos criar este serviço em breve
 import com.ecommerce.pedido.services.UsuarioService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("API/V1/usuarios")
+@RequestMapping("/API/V1/usuarios")
 public class UsuarioController {
 
     private final UsuarioService usuarioService;

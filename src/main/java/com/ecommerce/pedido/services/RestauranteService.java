@@ -6,6 +6,10 @@ import com.ecommerce.pedido.models.Restaurante;
 import com.ecommerce.pedido.models.Usuario;
 import com.ecommerce.pedido.repositories.RestauranteRepository;
 import com.ecommerce.pedido.repositories.UsuarioRepository;
+import com.ecommerce.pedido.services.exceptions.CnpjEmUsoExcption;
+import com.ecommerce.pedido.services.exceptions.RestauranteNaoEncontradoException;
+import com.ecommerce.pedido.services.exceptions.UsuarioNaoEncontradoException;
+import com.ecommerce.pedido.services.exceptions.UsuarioPossuiRestauranteException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,26 +21,27 @@ import java.util.stream.Collectors;
 @Service
 public class RestauranteService {
 
-    @Autowired
-    private RestauranteRepository restauranteRepository;
+    private final RestauranteRepository restauranteRepository;
+    private final UsuarioRepository usuarioRepository;
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
-
+    public RestauranteService(RestauranteRepository restauranteRepository, UsuarioRepository usuarioRepository) {
+        this.restauranteRepository = restauranteRepository;
+        this.usuarioRepository = usuarioRepository;
+    }
     @Transactional
     public RestauranteResponseDTO criar(RestauranteRequestDTO requestDTO) {
         // Buscar o usurio que será o dono. Se não existir, lança exceção.
         Usuario dono = usuarioRepository.findById(requestDTO.getUsuarioId())
-                .orElseThrow(() -> new RuntimeException("Usuário dono não encontrado com o ID: " + requestDTO.getUsuarioId()));
+                .orElseThrow(() -> new UsuarioNaoEncontradoException("Usuário dono não encontrado com o ID: " + requestDTO.getUsuarioId()));
 
         // Verificar se este usuário já é dono de outro restaurante.
         if (restauranteRepository.existsByUsuario_Id(dono.getId())) {
-            throw new RuntimeException("Este usuário já é dono de um restaurante.");
+            throw new UsuarioPossuiRestauranteException("Este usuário já é dono de um restaurante.");
         }
 
         // Verificar se o CNPJ já está em uso.
         restauranteRepository.findByCnpj(requestDTO.getCnpj()).ifPresent(r -> {
-            throw new RuntimeException("Este CNPJ já está cadastrado.");
+            throw new CnpjEmUsoExcption("Este CNPJ já está cadastrado.");
         });
 
         // Cria e associa o restaurante ao dono.
@@ -60,7 +65,7 @@ public class RestauranteService {
     @Transactional(readOnly = true)
     public RestauranteResponseDTO buscarPorId(Long id) {
         Restaurante restaurante = restauranteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Restaurante não encontrado com o ID: " + id));
+                .orElseThrow(() -> new RestauranteNaoEncontradoException("Restaurante não encontrado com o ID: " + id));
         return toResponseDTO(restaurante);
     }
 
@@ -68,12 +73,12 @@ public class RestauranteService {
     public RestauranteResponseDTO atualizar(Long id, RestauranteRequestDTO requestDTO) {
         // Busca o restaurante existente no banco de dados.
         Restaurante restaurante = restauranteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Restaurante não encontrado com o ID: " + id));
+                .orElseThrow(() -> new RestauranteNaoEncontradoException("Restaurante não encontrado com o ID: " + id));
 
         // Validação de CNPJ único na atualização.
         restauranteRepository.findByCnpj(requestDTO.getCnpj()).ifPresent(r -> {
             if (!r.getId().equals(id)) {
-                throw new RuntimeException("Este CNPJ já está em uso por outro restaurante.");
+                throw new CnpjEmUsoExcption("Este CNPJ já está em uso por outro restaurante.");
             }
         });
 
@@ -85,7 +90,7 @@ public class RestauranteService {
     @Transactional
     public void deletar(Long id) {
         if (!restauranteRepository.existsById(id)) {
-            throw new RuntimeException("Restaurante não encontrado com o ID: " + id);
+            throw new RestauranteNaoEncontradoException("Restaurante não encontrado com o ID: " + id);
         }
         restauranteRepository.deleteById(id);
     }

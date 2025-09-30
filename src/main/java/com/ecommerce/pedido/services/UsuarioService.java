@@ -4,6 +4,8 @@ import com.ecommerce.pedido.dtos.UsuarioRequestDTO;
 import com.ecommerce.pedido.dtos.UsuarioResponseDTO;
 import com.ecommerce.pedido.models.Usuario;
 import com.ecommerce.pedido.repositories.UsuarioRepository;
+import com.ecommerce.pedido.services.exceptions.EmailCadastradoExcption;
+import com.ecommerce.pedido.services.exceptions.UsuarioNaoEncontradoException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -27,7 +29,7 @@ public class UsuarioService {
     public UsuarioResponseDTO criar(UsuarioRequestDTO requestDTO) {
         // Verificar se o e-mail já está em uso
         if (usuarioRepository.findByEmail(requestDTO.getEmail()).isPresent()) {
-            throw new RuntimeException("Este e-mail já está cadastrado.");
+            throw new EmailCadastradoExcption("Este e-mail já está cadastrado.");
         }
 
         Usuario novoUsuario = new Usuario();
@@ -42,7 +44,7 @@ public class UsuarioService {
     @Transactional(readOnly = true)
     public UsuarioResponseDTO buscarPorId(Long id) {
         Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com o id: " + id));
+                .orElseThrow(() -> new UsuarioNaoEncontradoException("Usuário não encontrado com o id: " + id));
         return toResponseDTO(usuario);
     }
 
@@ -58,13 +60,13 @@ public class UsuarioService {
     @Transactional
     public UsuarioResponseDTO atualizar(Long id, UsuarioRequestDTO requestDTO) {
         Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com o id: " + id));
+                .orElseThrow(() -> new UsuarioNaoEncontradoException("Usuário não encontrado com o id: " + id));
 
         boolean emailAlterado = !usuario.getEmail().equals(requestDTO.getEmail());
         boolean emailEmUso = usuarioRepository.findByEmail(requestDTO.getEmail()).isPresent();
 
         if (emailAlterado && emailEmUso) {
-            throw new RuntimeException("O novo e-mail já está em uso por outro usuário.");
+            throw new EmailCadastradoExcption("O novo e-mail já está em uso por outro usuário.");
         }
 
         BeanUtils.copyProperties(requestDTO, usuario, "id", "senha");
@@ -81,7 +83,7 @@ public class UsuarioService {
     public void deletar(Long id) {
         // 1. Verifica se o usuário existe antes de tentar deletar.
         if (!usuarioRepository.existsById(id)) {
-            throw new RuntimeException("Usuário não encontrado com o id: " + id);
+            throw new UsuarioNaoEncontradoException("Usuário não encontrado com o id: " + id);
         }
         usuarioRepository.deleteById(id);
     }
