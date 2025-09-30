@@ -109,8 +109,16 @@ Todos os endpoints, exceto **/login** e o **cadastro de usuários**, requerem um
 ### Configuração
 Clone o repositório:
 ```bash
-git clone [<url-do-seu-repositorio>](https://github.com/EduardoAlvez/Api-de-pedidos-de-comida.git)
+git clone https://github.com/EduardoAlvez/Api-de-pedidos-de-comida.git
 ```
+### Executando a Aplicação
+
+Compile o projeto:
+```bash
+mvn clean install
+mvn spring-boot:run
+```
+Ou rode a classe principal PedidoServiceApplication.java diretamente pela sua IDE.
 
 ## ➡️ A API estará disponível em: 
 ```
