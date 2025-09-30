@@ -19,6 +19,7 @@ public class Pagamento {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private BigDecimal valorTotal;
     private LocalDateTime dataDoPagamento;
 

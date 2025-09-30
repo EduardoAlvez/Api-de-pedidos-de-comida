@@ -21,6 +21,10 @@ public class Restaurante {
     private String nome;
     private String endereco;
     private String telefone;
+    private String cnpj;
+    private String tipoCozinha;
+    private String horarioFuncionamento;
+    private String imageUrl;
 
     @OneToMany(mappedBy = "restaurante")
     private List<Produto> produtos;
@@ -29,8 +33,8 @@ public class Restaurante {
     private List<Pedido> pedidos;
 
     @OneToOne
-    @JoinColumn(name = "cliente_id", nullable = false, unique = true)
-    private Cliente cliente; // cada restaurante pertence a 1 cliente
+    @JoinColumn(name = "usuario_id", nullable = false, unique = true)
+    private Usuario usuario; // cada restaurante pertence a 1 cliente
 
 
 }

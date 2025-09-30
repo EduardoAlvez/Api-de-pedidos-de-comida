@@ -17,9 +17,13 @@ public class Produto {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String nome;
     private String descricao;
     private BigDecimal preco;
+    private String categoria;
+    private String imageUrl;
+    private boolean disponivel = true;
 
     @ManyToOne
     @JoinColumn(name = "restaurante_id")
