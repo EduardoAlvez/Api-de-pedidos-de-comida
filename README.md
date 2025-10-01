@@ -47,7 +47,7 @@ Este projeto consiste em uma **API back-end** que simula o funcionamento de um a
 - Uso de **Spring Profiles** para alternar facilmente entre diferentes configurações de banco de dados.  
 - **Perfil de desenvolvimento (dev)** com **H2 Database** (com console acessível em `/h2-console`).  
 - **Perfil de produção/docker (postgre)** configurado para **PostgreSQL** [bugado no mue pc :/]
-- **Perfil de produção/docker (mysql)** configurado para **MySQL**
+- **Perfil de produção (mysql)** configurado para **MySQL**
 
 
 ## 🔑 Principais Endpoints
