@@ -65,6 +65,13 @@ Todos os endpoints, exceto **/login** e o **cadastro de usuários**, requerem um
 - `DELETE /produtos/{id}` → Deleta um produto.  
 - `GET /
 
+### 📦 Pedidos
+- `POST /pedidos` → Cria um novo pedido (pode ser feito por usuário logado ou convidado).  
+- `GET /pedidos/{id}` → Busca um pedido específico pelo seu ID.  
+- `GET /pedidos/usuario/{usuarioId}` → Lista o histórico de pedidos de um usuário.  
+- `PUT /pedidos/{id}/status` → Atualiza o status de um pedido (ex: CONFIRMADO, CANCELADO, etc.).  
+
+
 
 ### ✅ Tratamento de Exceções
 - Exceções personalizadas para erros de negócio.  
@@ -72,6 +79,11 @@ Todos os endpoints, exceto **/login** e o **cadastro de usuários**, requerem um
 
 ### ✅ Documentação
 - Documentação interativa com **Swagger/OpenAPI 3**.  TÁ BUGADA!!!
+
+### ✅ Banco de Dados
+- Uso de **Spring Profiles** para alternar facilmente entre diferentes configurações de banco de dados.  
+- **Perfil de desenvolvimento (dev)** com **H2 Database** em memória para agilidade nos testes e desenvolvimento local (com console acessível em `/h2-console`).  
+- **Perfil de produção/docker (postgre)** configurado para **PostgreSQL**, garantindo a persistência dos dados em um ambiente robusto.  
 
 ---
 
@@ -120,7 +132,7 @@ mvn spring-boot:run
 ```
 Ou rode a classe principal PedidoServiceApplication.java diretamente pela sua IDE.
 
-## 🐳 Executando com Docker
+## 🐳 Executando com Docker [TA BUGADO]
 
 ### Pré-requisitos
 - **Docker** instalado  
