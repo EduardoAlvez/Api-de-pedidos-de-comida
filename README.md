@@ -36,6 +36,20 @@ Este projeto consiste em uma **API back-end** que simula o funcionamento de um a
 - Geração de um **Pagamento** associado a cada pedido.  
 - Atualização de status do pedido.
 
+### ✅ Tratamento de Exceções
+- Exceções personalizadas para erros de negócio.  
+- Handler global com `@ControllerAdvice` para respostas padronizadas.  
+
+### ✅ Documentação
+- Documentação interativa com **Swagger/OpenAPI 3**.
+
+### ✅ Banco de Dados
+- Uso de **Spring Profiles** para alternar facilmente entre diferentes configurações de banco de dados.  
+- **Perfil de desenvolvimento (dev)** com **H2 Database** (com console acessível em `/h2-console`).  
+- **Perfil de produção/docker (postgre)** configurado para **PostgreSQL** [bugado no mue pc :/]
+- **Perfil de produção/docker (mysql)** configurado para **MySQL**
+
+
 ## 🔑 Principais Endpoints
 
 A API está organizada em torno dos seguintes recursos principais.  
@@ -71,20 +85,6 @@ Todos os endpoints, exceto **/login** e o **cadastro de usuários**, requerem um
 - `GET /pedidos/usuario/{usuarioId}` → Lista o histórico de pedidos de um usuário.  
 - `PUT /pedidos/{id}/status` → Atualiza o status de um pedido (ex: CONFIRMADO, CANCELADO, etc.).  
 
-
-
-### ✅ Tratamento de Exceções
-- Exceções personalizadas para erros de negócio.  
-- Handler global com `@ControllerAdvice` para respostas padronizadas.  
-
-### ✅ Documentação
-- Documentação interativa com **Swagger/OpenAPI 3**.  TÁ BUGADA!!!
-
-### ✅ Banco de Dados
-- Uso de **Spring Profiles** para alternar facilmente entre diferentes configurações de banco de dados.  
-- **Perfil de desenvolvimento (dev)** com **H2 Database** em memória para agilidade nos testes e desenvolvimento local (com console acessível em `/h2-console`).  
-- **Perfil de produção/docker (postgre)** configurado para **PostgreSQL**, garantindo a persistência dos dados em um ambiente robusto.  
-
 ---
 
 ## 🛠 Tecnologias Utilizadas
@@ -94,7 +94,8 @@ Todos os endpoints, exceto **/login** e o **cadastro de usuários**, requerem um
 - **Spring Web**  
 - **Spring Security**  
 - **Lombok**  
-- **PostgreSQL** (produção)  
+- **PostgreSQL** (produção)
+- **MySQL** (produção) (Secundário) 
 - **H2 Database** (testes)  
 - **Maven** (gerenciamento de dependências)  
 - **Auth0 Java JWT** (JWT)  
