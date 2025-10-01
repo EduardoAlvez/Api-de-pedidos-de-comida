@@ -120,6 +120,18 @@ mvn spring-boot:run
 ```
 Ou rode a classe principal PedidoServiceApplication.java diretamente pela sua IDE.
 
+## 🐳 Executando com Docker
+
+### Pré-requisitos
+- **Docker** instalado  
+
+### Passo 1: Gerar o JAR da aplicação
+Antes de rodar o container, compile o projeto e gere o **.jar**:
+```
+mvn clean package -DskipTests
+
+docker-compose up --build
+```
 ## ➡️ A API estará disponível em: 
 ```
 http://localhost:8080
