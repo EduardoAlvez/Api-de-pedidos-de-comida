@@ -77,7 +77,6 @@ Todos os endpoints, exceto **/login** e o **cadastro de usuários**, requerem um
 - `GET /produtos/{id}` → Busca um produto específico pelo ID.  
 - `PUT /produtos/{id}` → Atualiza os dados de um produto.  
 - `DELETE /produtos/{id}` → Deleta um produto.  
-- `GET /
 
 ### 📦 Pedidos
 - `POST /pedidos` → Cria um novo pedido (pode ser feito por usuário logado ou convidado).  
