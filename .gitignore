@@ -32,6 +32,10 @@ build/
 ### VS Code ###
 .vscode/
 
+### Allure (gerado pelos testes) ###
+.allure/
+allure-results/
+
 ### OpenCode / OpenSpec (local only) ###
 .opencode/
 openspec/
