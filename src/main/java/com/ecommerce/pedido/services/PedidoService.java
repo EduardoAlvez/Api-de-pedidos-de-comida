@@ -23,12 +23,14 @@ public class PedidoService {
     private final RestauranteRepository restauranteRepository;
     private final UsuarioRepository usuarioRepository;
     private final ProdutoRepository produtoRepository;
+    private final RegiaoEntregaRepository regiaoEntregaRepository;
 
-    public PedidoService(PedidoRepository pedidoRepository, RestauranteRepository restauranteRepository, UsuarioRepository usuarioRepository, ProdutoRepository produtoRepository) {
+    public PedidoService(PedidoRepository pedidoRepository, RestauranteRepository restauranteRepository, UsuarioRepository usuarioRepository, ProdutoRepository produtoRepository, RegiaoEntregaRepository regiaoEntregaRepository) {
         this.pedidoRepository = pedidoRepository;
         this.restauranteRepository = restauranteRepository;
         this.usuarioRepository = usuarioRepository;
         this.produtoRepository = produtoRepository;
+        this.regiaoEntregaRepository = regiaoEntregaRepository;
     }
 
     @Transactional
@@ -85,8 +87,15 @@ public class PedidoService {
         pedido.setItens(itens);
 
         // --- 3. CÁLCULO DE TOTAIS E CRIAÇÃO DO PAGAMENTO ---
-        // A taxa de entrega poderia ser (uma lista de locais)
-        BigDecimal taxaEntrega = new BigDecimal("5.00");
+        BigDecimal taxaEntrega = BigDecimal.ZERO;
+        if (requestDTO.getRegiaoEntregaId() != null) {
+            RegiaoEntrega regiao = regiaoEntregaRepository.findById(requestDTO.getRegiaoEntregaId())
+                    .orElseThrow(() -> new RegiaoEntregaNaoEncontradaException("Região de entrega não encontrada com o ID: " + requestDTO.getRegiaoEntregaId()));
+            if (!regiao.getRestaurante().getId().equals(restaurante.getId())) {
+                throw new ValidacaoNegocioException("A região de entrega não pertence a este restaurante.");
+            }
+            taxaEntrega = regiao.getValorFrete();
+        }
 
         pedido.setSubtotal(subtotal);
         pedido.setTaxaEntrega(taxaEntrega);

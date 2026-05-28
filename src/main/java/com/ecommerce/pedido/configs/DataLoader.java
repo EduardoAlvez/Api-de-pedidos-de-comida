@@ -36,6 +36,9 @@ public class DataLoader implements CommandLineRunner {
     @Autowired
     private PagamentoRepository pagamentoRepository;
 
+    @Autowired
+    private RegiaoEntregaRepository regiaoEntregaRepository;
+
     @Override
     @Transactional
     public void run(String... args) throws Exception {
@@ -69,7 +72,14 @@ public class DataLoader implements CommandLineRunner {
                 dono2
         );
 
-        // 3. CRIAR PRODUTOS
+        // 3. CRIAR REGIÕES DE ENTREGA
+        criarRegiaoEntrega("Centro", new BigDecimal("8.50"), restaurante1);
+        criarRegiaoEntrega("Zona Sul", new BigDecimal("12.00"), restaurante1);
+        criarRegiaoEntrega("Zona Norte", new BigDecimal("15.00"), restaurante1);
+        criarRegiaoEntrega("Centro", new BigDecimal("7.00"), restaurante2);
+        criarRegiaoEntrega("Zona Leste", new BigDecimal("10.00"), restaurante2);
+
+        // 4. CRIAR PRODUTOS
         Produto feijoada = criarProduto(
                 "Feijoada Completa",
                 "Feijoada tradicional com todas as accompanhamentos",
@@ -97,7 +107,7 @@ public class DataLoader implements CommandLineRunner {
                 restaurante1
         );
 
-        // 4. CRIAR PEDIDO
+        // 5. CRIAR PEDIDO
         Pedido pedido = criarPedido(
                 "PED-001",
                 "Entregar sem campainha",
@@ -113,11 +123,11 @@ public class DataLoader implements CommandLineRunner {
                 restaurante1
         );
 
-        // 5. CRIAR ITENS DO PEDIDO
+        // 6. CRIAR ITENS DO PEDIDO
         ItemPedido item1 = criarItemPedido(1, new BigDecimal("35.90"), pedido, feijoada);
         ItemPedido item2 = criarItemPedido(1, new BigDecimal("12.00"), pedido, refrigerante);
 
-        // 6. CRIAR PAGAMENTO
+        // 7. CRIAR PAGAMENTO
         Pagamento pagamento = criarPagamento(
                 new BigDecimal("52.90"),
                 LocalDateTime.now().minusMinutes(30),
@@ -206,6 +216,14 @@ public class DataLoader implements CommandLineRunner {
         item.setPedido(pedido);
         item.setProduto(produto);
         return itemPedidoRepository.save(item);
+    }
+
+    private RegiaoEntrega criarRegiaoEntrega(String nome, BigDecimal valorFrete, Restaurante restaurante) {
+        RegiaoEntrega regiao = new RegiaoEntrega();
+        regiao.setNome(nome);
+        regiao.setValorFrete(valorFrete);
+        regiao.setRestaurante(restaurante);
+        return regiaoEntregaRepository.save(regiao);
     }
 
     private Pagamento criarPagamento(BigDecimal valorTotal, LocalDateTime dataPagamento,

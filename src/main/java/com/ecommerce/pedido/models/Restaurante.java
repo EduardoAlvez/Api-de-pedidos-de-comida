@@ -34,6 +34,10 @@ public class Restaurante {
     private List<Produto> produtos;
 
     @JsonManagedReference
+    @OneToMany(mappedBy = "restaurante", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RegiaoEntrega> regioes = new ArrayList<>();
+
+    @JsonManagedReference
     @OneToMany(mappedBy = "restaurante")
     private List<Pedido> pedidos;
 

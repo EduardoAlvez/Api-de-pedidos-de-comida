@@ -28,6 +28,9 @@ public class PedidoRequestDTO {
     private String telefoneUsuarioConvidado;
     private String emailUsuarioConvidado;
 
+    // Região de entrega para cálculo do frete. Obrigatório se o restaurante possuir regiões cadastradas.
+    private Long regiaoEntregaId;
+
     @NotEmpty(message = "O endereço de entrega não pode estar vazio.")
     private String enderecoDeEntrega;
 
