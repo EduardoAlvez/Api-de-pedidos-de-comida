@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### OpenCode / OpenSpec (local only) ###
+.opencode/
+openspec/

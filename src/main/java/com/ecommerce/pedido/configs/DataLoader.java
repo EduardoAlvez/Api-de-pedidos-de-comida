@@ -11,6 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 public class DataLoader implements CommandLineRunner {
@@ -39,6 +41,12 @@ public class DataLoader implements CommandLineRunner {
     @Autowired
     private RegiaoEntregaRepository regiaoEntregaRepository;
 
+    @Autowired
+    private MesaRepository mesaRepository;
+
+    @Autowired
+    private ComandaRepository comandaRepository;
+
     @Override
     @Transactional
     public void run(String... args) throws Exception {
@@ -48,6 +56,7 @@ public class DataLoader implements CommandLineRunner {
         Usuario cliente = criarUsuario("João Cliente", "cliente@email.com", "123456", "11999999999", Role.CLIENTE);
         Usuario dono1 = criarUsuario("Maria Restaurante", "dono1@email.com", "123456", "11888888888", Role.DONO_RESTAURANTE);
         Usuario dono2 = criarUsuario("Carlos Restaurante", "dono2@email.com", "123456", "11777777777", Role.DONO_RESTAURANTE);
+        Usuario garcom1 = criarUsuario("Pedro Garçom", "garcom@email.com", "123456", "11666666666", Role.GARCOM);
 
         // 2. CRIAR RESTAURANTES
         Restaurante restaurante1 = criarRestaurante(
@@ -140,6 +149,17 @@ public class DataLoader implements CommandLineRunner {
         pedido.setPagamento(pagamento);
         pedidoRepository.save(pedido);
 
+        // 8. CRIAR MESA E COMANDAS DE EXEMPLO
+        Mesa mesa1 = criarMesa("João", restaurante1);
+        criarComanda("João", mesa1, garcom1, List.of(
+                criarItemComanda(1, feijoada, false),
+                criarItemComanda(2, refrigerante, false)
+        ));
+        criarComanda("Maria", mesa1, garcom1, List.of(
+                criarItemComanda(1, feijoada, false),
+                criarItemComanda(1, refrigerante, true)
+        ));
+
         System.out.println("✅ Dados de teste criados com sucesso!");
         System.out.println("📧 Usuários para login:");
         System.out.println("   👤 Cliente: cliente@email.com / 123456");
@@ -224,6 +244,46 @@ public class DataLoader implements CommandLineRunner {
         regiao.setValorFrete(valorFrete);
         regiao.setRestaurante(restaurante);
         return regiaoEntregaRepository.save(regiao);
+    }
+
+    private Mesa criarMesa(String nomeCliente, Restaurante restaurante) {
+        Mesa mesa = new Mesa();
+        mesa.setNomeCliente(nomeCliente);
+        mesa.setStatus(StatusMesa.LIVRE);
+        mesa.setDataAbertura(LocalDateTime.now());
+        mesa.setRestaurante(restaurante);
+        return mesaRepository.save(mesa);
+    }
+
+    private void criarComanda(String clienteNome, Mesa mesa, Usuario garcom, List<ComandaItem> itens) {
+        Comanda comanda = new Comanda();
+        comanda.setMesa(mesa);
+        comanda.setGarcom(garcom);
+        comanda.setClienteNome(clienteNome);
+        comanda.setStatus(StatusComanda.ABERTA);
+        comanda.setDataAbertura(LocalDateTime.now());
+
+        BigDecimal valorTotal = BigDecimal.ZERO;
+        for (ComandaItem item : itens) {
+            item.setComanda(comanda);
+            valorTotal = valorTotal.add(item.getPrecoUnitario().multiply(BigDecimal.valueOf(item.getQuantidade())));
+        }
+        comanda.setItens(itens);
+        comanda.setValorTotal(valorTotal);
+        comanda.setRateios(new ArrayList<>());
+
+        mesa.setStatus(StatusMesa.OCUPADA);
+        mesaRepository.save(mesa);
+        comandaRepository.save(comanda);
+    }
+
+    private ComandaItem criarItemComanda(Integer quantidade, Produto produto, boolean compartilhado) {
+        ComandaItem item = new ComandaItem();
+        item.setQuantidade(quantidade);
+        item.setPrecoUnitario(produto.getPreco());
+        item.setProduto(produto);
+        item.setCompartilhado(compartilhado);
+        return item;
     }
 
     private Pagamento criarPagamento(BigDecimal valorTotal, LocalDateTime dataPagamento,
