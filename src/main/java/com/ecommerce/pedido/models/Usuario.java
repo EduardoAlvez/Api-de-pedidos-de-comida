@@ -48,6 +48,11 @@ public class Usuario implements UserDetails {
                     new SimpleGrantedAuthority(Role.DONO_RESTAURANTE.getRole()),
                     new SimpleGrantedAuthority(Role.CLIENTE.getRole())
             );
+        } else if (this.tipo == Role.GARCOM) {
+            return List.of(
+                    new SimpleGrantedAuthority(Role.GARCOM.getRole()),
+                    new SimpleGrantedAuthority(Role.CLIENTE.getRole())
+            );
         } else {
             return List.of(new SimpleGrantedAuthority(Role.CLIENTE.getRole()));
         }

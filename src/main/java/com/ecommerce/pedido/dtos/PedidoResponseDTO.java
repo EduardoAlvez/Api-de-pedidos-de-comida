@@ -1,5 +1,6 @@
 package com.ecommerce.pedido.dtos;
 
+import com.ecommerce.pedido.models.enums.OrigemPedido;
 import com.ecommerce.pedido.models.enums.StatusPedido;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,6 +17,7 @@ public class PedidoResponseDTO {
     private String codigoPedido;
     private LocalDateTime dataDoPedido;
     private StatusPedido status;
+    private OrigemPedido origem;
     private BigDecimal subtotal;
     private BigDecimal taxaEntrega;
     private BigDecimal valorTotal;
