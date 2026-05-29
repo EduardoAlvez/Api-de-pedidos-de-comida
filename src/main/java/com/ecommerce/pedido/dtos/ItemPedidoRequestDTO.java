@@ -1,5 +1,6 @@
 package com.ecommerce.pedido.dtos;
 
+import com.ecommerce.pedido.models.enums.TamanhoPorcao;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.Getter;
@@ -15,4 +16,6 @@ public class ItemPedidoRequestDTO {
     @NotNull(message = "A quantidade é obrigatória.")
     @Positive(message = "A quantidade deve ser maior que zero.")
     private Integer quantidade;
+
+    private TamanhoPorcao tamanho = TamanhoPorcao.INTEIRA;
 }

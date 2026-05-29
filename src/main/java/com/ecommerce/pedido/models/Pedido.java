@@ -2,6 +2,7 @@ package com.ecommerce.pedido.models;
 
 import com.ecommerce.pedido.models.enums.OrigemPedido;
 import com.ecommerce.pedido.models.enums.StatusPedido;
+import com.ecommerce.pedido.models.enums.TipoConsumo;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
@@ -34,6 +35,9 @@ public class Pedido {
 
     @Enumerated(EnumType.STRING)
     private OrigemPedido origem;
+
+    @Enumerated(EnumType.STRING)
+    private TipoConsumo tipoConsumo;
 
     // --- Valores explícitos e sem ambiguidade ---
     private BigDecimal subtotal;        // Valor dos itens

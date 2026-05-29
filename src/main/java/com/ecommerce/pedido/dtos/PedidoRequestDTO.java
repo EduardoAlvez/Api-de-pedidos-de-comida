@@ -1,6 +1,8 @@
 package com.ecommerce.pedido.dtos;
 
 import com.ecommerce.pedido.models.enums.FormaPagamento;
+import com.ecommerce.pedido.models.enums.OrigemPedido;
+import com.ecommerce.pedido.models.enums.TipoConsumo;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -19,6 +21,11 @@ public class PedidoRequestDTO {
     @NotNull(message = "A forma de pagamento é obrigatória.")
     private FormaPagamento formaDePagamento;
 
+    @NotNull(message = "A origem do pedido é obrigatória.")
+    private OrigemPedido origem;
+
+    private TipoConsumo tipoConsumo;
+
     // Se o pedido for feito por um usuário logado, este ID será preenchido.
     // Se for um convidado, será nulo.
     private Long usuarioId;
@@ -31,7 +38,6 @@ public class PedidoRequestDTO {
     // Região de entrega para cálculo do frete. Obrigatório se o restaurante possuir regiões cadastradas.
     private Long regiaoEntregaId;
 
-    @NotEmpty(message = "O endereço de entrega não pode estar vazio.")
     private String enderecoDeEntrega;
 
     private String observacoes;

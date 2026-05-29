@@ -1,6 +1,7 @@
 package com.ecommerce.pedido.models;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.ecommerce.pedido.models.enums.TamanhoPorcao;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ManyToAny;
@@ -22,6 +23,9 @@ public class ItemPedido {
 
     private Integer quantidade;
     private BigDecimal precoUnitario;
+
+    @Enumerated(EnumType.STRING)
+    private TamanhoPorcao tamanho = TamanhoPorcao.INTEIRA;
 
     @JsonBackReference
     @ManyToOne

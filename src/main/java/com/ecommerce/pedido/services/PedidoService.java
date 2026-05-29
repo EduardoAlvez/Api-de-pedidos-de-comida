@@ -2,8 +2,11 @@ package com.ecommerce.pedido.services;
 
 import com.ecommerce.pedido.dtos.*;
 import com.ecommerce.pedido.models.*;
+import com.ecommerce.pedido.models.enums.OrigemPedido;
 import com.ecommerce.pedido.models.enums.StatusPagamento;
 import com.ecommerce.pedido.models.enums.StatusPedido;
+import com.ecommerce.pedido.models.enums.TamanhoPorcao;
+import com.ecommerce.pedido.models.enums.TipoConsumo;
 import com.ecommerce.pedido.repositories.*;
 import com.ecommerce.pedido.services.exceptions.*;
 import org.springframework.beans.BeanUtils;
@@ -39,9 +42,24 @@ public class PedidoService {
         Restaurante restaurante = restauranteRepository.findById(requestDTO.getRestauranteId())
                 .orElseThrow(() -> new RestauranteNaoEncontradoException("Restaurante não encontrado."));
 
+        OrigemPedido origem = requestDTO.getOrigem();
+
+        // Valida endereço de entrega para DELIVERY
+        if (origem == OrigemPedido.DELIVERY) {
+            if (requestDTO.getEnderecoDeEntrega() == null || requestDTO.getEnderecoDeEntrega().isBlank()) {
+                throw new ValidacaoNegocioException("Endereço de entrega é obrigatório para pedidos DELIVERY.");
+            }
+        }
+
+        // Define tipoConsumo padrão para PRESENCIAL
+        TipoConsumo tipoConsumo = requestDTO.getTipoConsumo();
+        if (origem == OrigemPedido.PRESENCIAL && tipoConsumo == null) {
+            tipoConsumo = TipoConsumo.COMER_AQUI;
+        }
+
         Pedido pedido = new Pedido();
 
-        // Se for um pedido de usuário' logado...
+        // Se for um pedido de usuário logado...
         if (requestDTO.getUsuarioId() != null) {
             Usuario cliente = usuarioRepository.findById(requestDTO.getUsuarioId())
                     .orElseThrow(() -> new UsuarioNaoEncontradoException("Usuário cliente não encontrado."));
@@ -59,6 +77,8 @@ public class PedidoService {
         pedido.setRestaurante(restaurante);
         pedido.setDataDoPedido(LocalDateTime.now());
         pedido.setStatus(StatusPedido.AGUARDANDO_CONFIRMACAO);
+        pedido.setOrigem(origem);
+        pedido.setTipoConsumo(tipoConsumo);
         pedido.setEnderecoDeEntrega(requestDTO.getEnderecoDeEntrega());
         pedido.setObservacoes(requestDTO.getObservacoes());
 
@@ -74,14 +94,27 @@ public class PedidoService {
                 throw new ValidacaoNegocioException("O produto '" + produto.getNome() + "' Não pertence a este restaurante.");
             }
 
+            TamanhoPorcao tamanho = itemDTO.getTamanho() != null ? itemDTO.getTamanho() : TamanhoPorcao.INTEIRA;
+
+            BigDecimal precoUnitario;
+            if (tamanho == TamanhoPorcao.MEIA) {
+                if (produto.getPrecoMeia() == null) {
+                    throw new ValidacaoNegocioException("O produto '" + produto.getNome() + "' não oferece meia porção.");
+                }
+                precoUnitario = produto.getPrecoMeia();
+            } else {
+                precoUnitario = produto.getPreco();
+            }
+
             ItemPedido itemPedido = new ItemPedido();
-            itemPedido.setPedido(pedido); //bidirecional
+            itemPedido.setPedido(pedido);
             itemPedido.setProduto(produto);
             itemPedido.setQuantidade(itemDTO.getQuantidade());
-            itemPedido.setPrecoUnitario(produto.getPreco()); // Grava o preço do momento da compra
+            itemPedido.setPrecoUnitario(precoUnitario);
+            itemPedido.setTamanho(tamanho);
 
             itens.add(itemPedido);
-            subtotal = subtotal.add(produto.getPreco().multiply(BigDecimal.valueOf(itemDTO.getQuantidade())));
+            subtotal = subtotal.add(precoUnitario.multiply(BigDecimal.valueOf(itemDTO.getQuantidade())));
         }
 
         pedido.setItens(itens);
@@ -105,14 +138,13 @@ public class PedidoService {
         pagamento.setPedido(pedido);
         pagamento.setValorTotal(pedido.getValorTotal());
         pagamento.setFormaDePagamento(requestDTO.getFormaDePagamento());
-        pagamento.setStatus(StatusPagamento.PENDENTE); // sempre começar como pendente
+        pagamento.setStatus(StatusPagamento.PENDENTE);
 
-        pedido.setPagamento(pagamento); // Associa o pagamento ao pedido
+        pedido.setPagamento(pagamento);
 
         // --- 4. PERSISTÊNCIA E FINALIZAÇÃO ---
         Pedido pedidoSalvo = pedidoRepository.save(pedido);
 
-        // Gera um código após ter o "ID"
         pedidoSalvo.setCodigoPedido(String.format("PED-%06d", pedidoSalvo.getId()));
         pedidoRepository.save(pedidoSalvo);
 

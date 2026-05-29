@@ -13,6 +13,7 @@ public class ProdutoResponseDTO {
     private String nome;
     private String descricao;
     private BigDecimal preco;
+    private BigDecimal precoMeia;
     private String categoria;
     private boolean disponivel;
 

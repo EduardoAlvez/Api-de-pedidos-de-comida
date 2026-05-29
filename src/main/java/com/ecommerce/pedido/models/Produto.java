@@ -23,6 +23,7 @@ public class Produto {
     private String nome;
     private String descricao;
     private BigDecimal preco;
+    private BigDecimal precoMeia;
     private String categoria;
     private String imageUrl;
     private boolean disponivel = true;
