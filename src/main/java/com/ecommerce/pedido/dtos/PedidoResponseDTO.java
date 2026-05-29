@@ -2,6 +2,7 @@ package com.ecommerce.pedido.dtos;
 
 import com.ecommerce.pedido.models.enums.OrigemPedido;
 import com.ecommerce.pedido.models.enums.StatusPedido;
+import com.ecommerce.pedido.models.enums.TipoConsumo;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,6 +19,7 @@ public class PedidoResponseDTO {
     private LocalDateTime dataDoPedido;
     private StatusPedido status;
     private OrigemPedido origem;
+    private TipoConsumo tipoConsumo;
     private BigDecimal subtotal;
     private BigDecimal taxaEntrega;
     private BigDecimal valorTotal;

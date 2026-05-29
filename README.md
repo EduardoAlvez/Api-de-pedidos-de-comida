@@ -1,150 +1,283 @@
 # 🍔 API de Pedidos de Comida
 
-API RESTful completa para um sistema de delivery de comida, desenvolvida com **Spring Boot**.  
-O projeto abrange desde o cadastro de usuários e restaurantes até a criação de pedidos e autenticação segura via **JWT**.
+API RESTful completa para sistema de delivery de comida **e comanda digital** (atendimento presencial), desenvolvida com **Spring Boot 3.3.1**.  
+O projeto abrange desde cadastro de usuários e restaurantes até criação de pedidos, autenticação via **JWT**, **frete dinâmico por região** e **comanda eletrônica** com rateio de itens compartilhados.
 
 ---
 
 ## 📌 Sobre o Projeto
-Este projeto consiste em uma **API back-end** que simula o funcionamento de um aplicativo de delivery.  
 
-- Usuários podem se cadastrar como **donos de restaurantes** ou **clientes**.  
-- Donos de restaurantes podem gerenciar seus estabelecimentos e cardápios.  
-- Clientes podem visualizar restaurantes, produtos e realizar pedidos, mesmo sem estarem logados (**guest checkout**).
+API back-end que simula o funcionamento de um aplicativo de delivery **com suporte a atendimento presencial** (comanda digital). Ideal para praças de alimentação (*food courts*) onde cada cliente pode pagar e sair individualmente.
+
+- Usuários podem se cadastrar como **donos de restaurantes**, **clientes** ou **garçons**
+- Donos de restaurantes gerenciam estabelecimentos, cardápios e **regiões de entrega**
+- Clientes podem fazer pedidos online (**DELIVERY**) mesmo sem login (*guest checkout*)
+- Garçons abrem mesas, criam comandas e registram pedidos presenciais (**PRESENCIAL**)
+- Itens compartilhados (ex: Coca 2L) são rateados entre as comandas — cada um paga o quanto consumir
+- Testes automatizados implementados com auxílio de IA (opencode) para otimizar cobertura e geração de cenários
 
 ---
 
 ## ⚙️ Funcionalidades
 
 ### ✅ Gerenciamento de Usuários
-- Cadastro de usuários com papéis (**DONO_RESTAURANTE**, **CLIENTE**).  
-- CRUD completo de usuários.  
+- Cadastro com papéis: **DONO_RESTAURANTE**, **CLIENTE**, **GARCOM**
+- CRUD completo de usuários
 
 ### ✅ Segurança
-- Autenticação **stateless** baseada em **JWT (JSON Web Tokens)**.  
-- Endpoints públicos (/login, cadastro) e privados.  
-- Criptografia de senhas com **BCrypt**.  
+- Autenticação **stateless** baseada em **JWT (JSON Web Tokens)** com **auth0/java-jwt 4.4.0**
+- Endpoints públicos (`/login`, cadastro) e privados por role
+- Criptografia de senhas com **BCrypt**
+- Três roles com permissões distintas
 
 ### ✅ Gerenciamento de Restaurantes e Produtos
-- Donos de restaurantes podem cadastrar e gerenciar seus estabelecimentos.  
-- CRUD completo de produtos (cardápio).  
+- Donos de restaurantes cadastram e gerenciam seus estabelecimentos
+- CRUD completo de produtos (cardápio)
 
 ### ✅ Sistema de Pedidos
-- Criação de pedidos complexos com múltiplos itens.  
-- Suporte para pedidos de usuários logados e convidados.  
-- Cálculo de **subtotal, taxa de entrega e valor total**.  
-- Geração de um **Pagamento** associado a cada pedido.  
-- Atualização de status do pedido.
+- Pedidos com **origem**: `DELIVERY` (online) ou `PRESENCIAL` (comanda)
+- Criação de pedidos com múltiplos itens
+- Suporte para usuários logados e convidados
+- Cálculo de subtotal, taxa de entrega e valor total
+- Geração de pagamento associado a cada pedido
+- Atualização de status do pedido
+
+### ✅ Frete Dinâmico por Região de Entrega
+- Restaurantes definem regiões de entrega com **taxa fixa por região**
+- CRUD completo de regiões vinculadas ao restaurante
+- Cada região possui nome, taxa e raio de abrangência
+
+### ✅ Comanda Digital (Atendimento Presencial)
+- **Mesas**: abertura, fechamento e controle de status (`LIVRE`, `OCUPADA`)
+- **Comandas individuais**: cada cliente na mesa tem sua própria comanda
+- **Rateio compartilhado**: itens divididos (ex: Coca 2L) podem ser rateados — cada cliente paga um valor arbitrário
+- **Fechamento individual**: cada cliente paga sua comanda e sai sem precisar dividir igualmente
+- Mesa só fica `LIVRE` quando **todas** as comandas estão pagas
 
 ### ✅ Tratamento de Exceções
-- Exceções personalizadas para erros de negócio.  
-- Handler global com `@ControllerAdvice` para respostas padronizadas.  
+- Exceções personalizadas para erros de negócio (`ValidacaoNegocioException`)
+- Handler global com `@ControllerAdvice` para respostas padronizadas
+
+### ✅ Testes Automatizados
+- **36 testes** no total (18 unitários + 18 integração)
+- Unitários: JUnit 5 + Mockito (camada service)
+- Integração: REST Assured + Spring MockMvc (camada controller)
+- Relatórios com **Allure** (comportamento + severidade + steps)
+- Cobertura com **JaCoCo**
+- Branch `QA` dedicada exclusivamente aos testes
 
 ### ✅ Documentação
-- Documentação interativa com **Swagger/OpenAPI 3**.
+- Documentação interativa com **Swagger/OpenAPI 3** em `/swagger-ui.html`
 
 ### ✅ Banco de Dados
-- Uso de **Spring Profiles** para alternar facilmente entre diferentes configurações de banco de dados.  
-- **Perfil de desenvolvimento (dev)** com **H2 Database** (com console acessível em `/h2-console`).  
-- **Perfil de produção/docker (postgre)** configurado para **PostgreSQL** [bugado no mue pc :/]
-- **Perfil de produção (mysql)** configurado para **MySQL**
+- **Spring Profiles** para alternar entre configurações:
+  - `h2` — H2 Database (dev, padrão)
+  - `mysql` — MySQL (produção)
+  - `postgre` — PostgreSQL (produção)
 
+---
 
-## 🔑 Principais Endpoints
+## 🔑 Endpoints da API
 
-A API está organizada em torno dos seguintes recursos principais.  
-Todos os endpoints, exceto **/login** e o **cadastro de usuários**, requerem um **token JWT** no cabeçalho `Authorization`.
+A API está organizada em torno dos recursos abaixo.  
+Todos os endpoints, exceto `/login`, requerem **token JWT** no cabeçalho `Authorization: Bearer <token>`.
 
 ### 🔐 Autenticação
-- `POST /login` → Realiza a autenticação de um usuário com e-mail e senha, retornando um token JWT.  
+| Método | Caminho | Descrição |
+|--------|---------|-----------|
+| `POST` | `/login` | Autenticação com e-mail e senha → retorna JWT |
 
 ### 👤 Usuários
-- `POST /usuarios` → Cria um novo usuário (**CLIENTE** ou **DONO_RESTAURANTE**).  
-- `GET /usuarios` → Lista todos os usuários cadastrados.  
-- `GET /usuarios/{id}` → Busca um usuário específico pelo ID.  
-- `PUT /usuarios/{id}` → Atualiza os dados de um usuário.  
-- `DELETE /usuarios/{id}` → Deleta um usuário.  
+| Método | Caminho | Descrição |
+|--------|---------|-----------|
+| `POST` | `/API/V1/usuarios` | Criar usuário (CLIENTE, DONO_RESTAURANTE ou GARCOM) |
+| `GET` | `/API/V1/usuarios` | Listar todos os usuários |
+| `GET` | `/API/V1/usuarios/{id}` | Buscar usuário por ID |
+| `PUT` | `/API/V1/usuarios/{id}` | Atualizar usuário |
+| `DELETE` | `/API/V1/usuarios/{id}` | Deletar usuário |
 
 ### 🍽️ Restaurantes
-- `POST /restaurantes` → Cria um novo restaurante (**requer DONO_RESTAURANTE autenticado**).  
-- `GET /restaurantes` → Lista todos os restaurantes.  
-- `GET /restaurantes/{id}` → Busca um restaurante específico.  
-- `PUT /restaurantes/{id}` → Atualiza os dados de um restaurante.  
-- `DELETE /restaurantes/{id}` → Deleta um restaurante.  
+| Método | Caminho | Descrição |
+|--------|---------|-----------|
+| `POST` | `/API/V1/restaurantes` | Criar restaurante (requer DONO_RESTAURANTE) |
+| `GET` | `/API/V1/restaurantes` | Listar restaurantes |
+| `GET` | `/API/V1/restaurantes/{id}` | Buscar restaurante por ID |
+| `PUT` | `/API/V1/restaurantes/{id}` | Atualizar restaurante |
+| `DELETE` | `/API/V1/restaurantes/{id}` | Deletar restaurante |
 
 ### 🛒 Produtos (Cardápio)
-- `POST /produtos` → Adiciona um novo produto ao cardápio de um restaurante.  
-- `GET /produtos/{id}` → Busca um produto específico pelo ID.  
-- `PUT /produtos/{id}` → Atualiza os dados de um produto.  
-- `DELETE /produtos/{id}` → Deleta um produto.  
+| Método | Caminho | Descrição |
+|--------|---------|-----------|
+| `POST` | `/API/V1/produtos` | Adicionar produto ao cardápio |
+| `GET` | `/API/V1/produtos/{id}` | Buscar produto por ID |
+| `GET` | `/API/V1/produtos/restaurante/{restauranteId}` | Listar produtos de um restaurante |
+| `PUT` | `/API/V1/produtos/{id}` | Atualizar produto |
+| `DELETE` | `/API/V1/produtos/{id}` | Deletar produto |
 
 ### 📦 Pedidos
-- `POST /pedidos` → Cria um novo pedido (pode ser feito por usuário logado ou convidado).  
-- `GET /pedidos/{id}` → Busca um pedido específico pelo seu ID.  
-- `GET /pedidos/usuario/{usuarioId}` → Lista o histórico de pedidos de um usuário.  
-- `PUT /pedidos/{id}/status` → Atualiza o status de um pedido (ex: CONFIRMADO, CANCELADO, etc.).  
+| Método | Caminho | Descrição |
+|--------|---------|-----------|
+| `POST` | `/API/V1/pedidos` | Criar pedido (DELIVERY ou PRESENCIAL) |
+| `GET` | `/API/V1/pedidos/{id}` | Buscar pedido por ID |
+| `GET` | `/API/V1/pedidos/usuario/{usuarioId}` | Histórico de pedidos do usuário |
+| `PUT` | `/API/V1/pedidos/{id}/status` | Atualizar status do pedido |
+
+### 🚚 Regiões de Entrega (Frete Dinâmico)
+| Método | Caminho | Descrição |
+|--------|---------|-----------|
+| `GET` | `/API/V1/restaurantes/{restauranteId}/regioes` | Listar regiões de entrega |
+| `POST` | `/API/V1/restaurantes/{restauranteId}/regioes` | Criar região de entrega |
+| `GET` | `/API/V1/restaurantes/{restauranteId}/regioes/{id}` | Buscar região por ID |
+| `PUT` | `/API/V1/restaurantes/{restauranteId}/regioes/{id}` | Atualizar região |
+| `DELETE` | `/API/V1/restaurantes/{restauranteId}/regioes/{id}` | Deletar região |
+
+### 🪑 Mesas
+| Método | Caminho | Descrição |
+|--------|---------|-----------|
+| `POST` | `/API/V1/mesas` | Abrir mesa |
+| `GET` | `/API/V1/mesas` | Listar mesas (filtro: `?restauranteId=`) |
+| `GET` | `/API/V1/mesas/{id}` | Buscar mesa por ID |
+| `PUT` | `/API/V1/mesas/{id}` | Atualizar mesa |
+| `DELETE` | `/API/V1/mesas/{id}` | Fechar/deletar mesa |
+
+### 📋 Comandas
+| Método | Caminho | Descrição |
+|--------|---------|-----------|
+| `POST` | `/API/V1/mesas/{mesaId}/comandas` | Criar comanda para um cliente na mesa |
+| `GET` | `/API/V1/comandas` | Listar comandas (filtro: `?mesaId=`) |
+| `GET` | `/API/V1/comandas/{id}` | Buscar comanda por ID |
+| `POST` | `/API/V1/comandas/{id}/rateio` | Ratear item compartilhado na comanda |
+| `POST` | `/API/V1/comandas/{id}/fechar` | Fechar comanda (pagamento) |
 
 ---
 
 ## 🛠 Tecnologias Utilizadas
-- **Java 21**  
-- **Spring Boot 3.2.5**  
-- **Spring Data JPA & Hibernate**  
-- **Spring Web**  
-- **Spring Security**  
-- **Lombok**  
-- **PostgreSQL** (produção)
-- **MySQL** (produção) (Secundário) 
-- **H2 Database** (testes)  
-- **Maven** (gerenciamento de dependências)  
-- **Auth0 Java JWT** (JWT)  
-- **SpringDoc OpenAPI** (Swagger)  
+
+| Categoria | Tecnologia |
+|-----------|-----------|
+| **Linguagem** | Java 21 |
+| **Framework** | Spring Boot 3.3.1 |
+| **Persistência** | Spring Data JPA + Hibernate |
+| **Web** | Spring Web |
+| **Segurança** | Spring Security + Auth0 java-jwt 4.4.0 |
+| **Documentação** | SpringDoc OpenAPI 2.3.0 (Swagger) |
+| **Banco de Dados** | H2 (dev), MySQL, PostgreSQL |
+| **Build** | Maven |
+| **Testes Unitários** | JUnit 5 + Mockito |
+| **Testes de Integração** | REST Assured + Spring MockMvc |
+| **Relatórios** | Allure + JaCoCo |
+| **DTO Mapping** | BeanUtils.copyProperties |
+| **Lombok** | Redução de boilerplate |
 
 ---
 
 ## 🏛 Arquitetura e Padrões
-- **Arquitetura em Camadas**: Controller, Service, Repository.  
-- **DTO Pattern**: separação de entidades e objetos de transferência.  
-- **Injeção de Dependências (DI)**: com Spring.  
-- **Tratamento Centralizado de Exceções** com `@ControllerAdvice`.  
-- **Mapeamento de Entidades**: uso de `@JsonManagedReference` e `@JsonBackReference` para evitar recursão infinita.  
+
+- **Arquitetura em Camadas**: Controller → Service → Repository
+- **DTO Pattern**: separação entre entidades JPA e objetos de transferência
+- **Injeção de Dependências**: com Spring (`@Autowired` / construtor)
+- **Tratamento Centralizado de Exceções**: `@ControllerAdvice` com respostas JSON padronizadas
+- **Três Roles de Acesso**: `DONO_RESTAURANTE`, `CLIENTE`, `GARCOM`
+- **Frete Dinâmico**: cada restaurante define regiões com taxas fixas
+- **Comanda Digital**: rateio flexível (valor arbitrário, não divisão igual)
+- **Branch Estratégica**: `master` (produção) + `QA` (testes e validação)
 
 ---
 
 ## 🚀 Como Executar
 
 ### Pré-requisitos
-- **JDK 21** ou superior  
-- **Maven 3.8+**  
-- Um cliente de API (**Postman**, **Insomnia**, etc.)  
+
+- **JDK 21** ou superior
+- **Maven 3.8+**
+- Cliente de API (Postman, Insomnia, etc.)
 
 ### Configuração
-Clone o repositório:
+
 ```bash
 git clone https://github.com/EduardoAlvez/Api-de-pedidos-de-comida.git
 ```
-### Executando a Aplicação
 
-Compile o projeto:
+### Executando (perfil padrão — H2)
+
 ```bash
 mvn clean install
 mvn spring-boot:run
 ```
-Ou rode a classe principal PedidoServiceApplication.java diretamente pela sua IDE.
 
-## 🐳 Executando com Docker [TA BUGADO]
+A API estará em `http://localhost:8080` e o console H2 em `http://localhost:8080/h2-console`.
+
+### Perfis de Banco de Dados
+
+| Perfil | Banco | Ativação |
+|--------|-------|----------|
+| `h2` | H2 (dev, padrão) | `mvn spring-boot:run` (default) |
+| `mysql` | MySQL | `mvn spring-boot:run -Dspring.profiles.active=mysql` |
+| `postgre` | PostgreSQL | `mvn spring-boot:run -Dspring.profiles.active=postgre` |
+
+---
+
+## 🧪 Testes
+
+### Stack
+
+- **Unitários**: JUnit 5 + Mockito (18 testes — services)
+- **Integração**: REST Assured + Spring MockMvc (18 testes — controllers)
+- **Relatório de comportamento**: Allure (features, severidades, steps)
+- **Cobertura**: JaCoCo
+- **Implementação assistida**: os testes foram gerados e refinados com auxílio de IA (opencode), acelerando a criação de cenários e garantindo aderência às especificações do projeto
+
+### Executar todos os testes
+
+```bash
+mvn clean test
+```
+
+### Relatórios
+
+- **Allure**: `target/site/allure-maven-plugin/index.html`
+- **JaCoCo**: `target/site/jacoco/index.html`
+
+```bash
+# Gerar relatório Allure completo
+mvn allure:report
+```
+
+---
+
+## 🌿 Estratégia de Branches
+
+- **`master`** — código de produção (funcionalidades estáveis)
+- **`QA`** — branch de testes (contém todos os commits de teste + metadados Allure)
+
+As funcionalidades são desenvolvidas em feature branches e mescladas no `master`. Os commits seguem o padrão:
+
+```
+TIPO: descrição
+```
+
+Onde `TIPO` pode ser: `FEATURE`, `FIX`, `TEST`, `REFACTOR`, `DOCS`, etc.  
+Consulte `COMMIT_CONVENTION.md` para detalhes completos.
+
+---
+
+## 🐳 Docker (em desenvolvimento)
 
 ### Pré-requisitos
-- **Docker** instalado  
 
-### Passo 1: Gerar o JAR da aplicação
-Antes de rodar o container, compile o projeto e gere o **.jar**:
-```
+- **Docker** instalado
+
+### Passo 1: Gerar o JAR
+
+```bash
 mvn clean package -DskipTests
-
 docker-compose up --build
 ```
-## ➡️ A API estará disponível em: 
-```
-http://localhost:8080
-```
+
+> ⚠️ O suporte a Docker ainda está em fase de ajustes.
+
+---
+
+## 📄 Licença
+
+Projeto acadêmico para Trabalho de Conclusão de Curso (TCC).

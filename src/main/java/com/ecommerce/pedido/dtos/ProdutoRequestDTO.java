@@ -20,9 +20,12 @@ public class ProdutoRequestDTO {
     @NotBlank(message = "A descrição não pode estar em branco.")
     private String descricao;
 
-    @NotNull(message = "O preço не pode ser nulo.")
+    @NotNull(message = "O preço não pode ser nulo.")
     @Positive(message = "O preço deve ser um valor positivo.")
     private BigDecimal preco;
+
+    @Positive(message = "O preço da meia deve ser um valor positivo.")
+    private BigDecimal precoMeia;
 
     @NotBlank(message = "A categoria не pode estar em branco.")
     private String categoria;

@@ -115,6 +115,8 @@ public class DataLoader implements CommandLineRunner {
                 "https://exemplo.com/refri.jpg",
                 restaurante1
         );
+        refrigerante.setPrecoMeia(new BigDecimal("7.00"));
+        produtoRepository.save(refrigerante);
 
         // 5. CRIAR PEDIDO
         Pedido pedido = criarPedido(
