@@ -167,7 +167,7 @@ public class DataLoader implements CommandLineRunner {
 
         // 9. CRIAR TRANSAÇÃO PIX DE EXEMPLO (se não existir)
         List<Comanda> comandas = comandaRepository.findAllByMesa_IdOrderByDataAberturaDesc(mesa1.getId());
-        if (!comandas.isEmpty() && transacaoPixRepository.findByComanda_Id(comandas.get(0).getId()).isEmpty()) {
+        if (!comandas.isEmpty() && transacaoPixRepository.findAllByComanda_Id(comandas.get(0).getId()).isEmpty()) {
             TransacaoPix transacao = new TransacaoPix();
             transacao.setComanda(comandas.get(0));
             transacao.setValor(comandas.get(0).getValorTotal());
