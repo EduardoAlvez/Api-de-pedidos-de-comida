@@ -48,7 +48,7 @@ public class MercadoPagoPixClient implements PixClient {
             body.put("type", "qr");
             body.put("total_amount", valorStr);
             body.put("description", descricao);
-            body.put("external_reference", descricao);
+            body.put("external_reference", "ref-" + descricao.replaceAll("[^a-zA-Z0-9\\-_]", ""));
 
             ObjectNode configNode = mapper.createObjectNode();
             ObjectNode qrConfig = mapper.createObjectNode();

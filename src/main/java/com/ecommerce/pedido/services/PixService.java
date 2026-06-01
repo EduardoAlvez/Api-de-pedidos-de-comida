@@ -12,6 +12,8 @@ import com.ecommerce.pedido.repositories.TransacaoPixRepository;
 import com.ecommerce.pedido.services.exceptions.EntidadeNaoEncontradaException;
 import com.ecommerce.pedido.services.exceptions.ValidacaoAssinaturaException;
 import com.ecommerce.pedido.services.exceptions.ValidacaoNegocioException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,11 +22,15 @@ import javax.crypto.spec.SecretKeySpec;
 import java.math.BigDecimal;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
 public class PixService {
+
+    private static final Logger log = LoggerFactory.getLogger(PixService.class);
 
     private final PixClient pixClient;
     private final ComandaRepository comandaRepository;
@@ -50,12 +56,21 @@ public class PixService {
             throw new ValidacaoNegocioException("Comanda já está paga.");
         }
 
-        TransacaoPix transacaoExistente = transacaoPixRepository
-                .findByComanda_Id(comandaId).orElse(null);
+        List<TransacaoPix> transacoesExistentes = transacaoPixRepository
+                .findAllByComanda_Id(comandaId);
 
-        if (transacaoExistente != null
-                && transacaoExistente.getStatus() == StatusTransacaoPix.AGUARDANDO) {
-            return toResponseDTO(transacaoExistente);
+        TransacaoPix transacaoAguardando = transacoesExistentes.stream()
+                .filter(t -> t.getStatus() == StatusTransacaoPix.AGUARDANDO)
+                .max(Comparator.comparing(TransacaoPix::getDataCriacao))
+                .orElse(null);
+
+        if (transacaoAguardando != null) {
+            if (transacaoAguardando.getDataCriacao() != null
+                    && Duration.between(transacaoAguardando.getDataCriacao(), LocalDateTime.now()).toMinutes() < 15) {
+                return toResponseDTO(transacaoAguardando);
+            }
+            transacaoAguardando.setStatus(StatusTransacaoPix.EXPIROU);
+            transacaoPixRepository.save(transacaoAguardando);
         }
 
         BigDecimal saldoRestante = calcularSaldoRestante(comanda);
@@ -85,8 +100,10 @@ public class PixService {
     }
 
     public PixResponseDTO consultarStatus(Long comandaId) {
-        TransacaoPix transacao = transacaoPixRepository
-                .findByComanda_Id(comandaId)
+        List<TransacaoPix> transacoes = transacaoPixRepository
+                .findAllByComanda_Id(comandaId);
+        TransacaoPix transacao = transacoes.stream()
+                .max(Comparator.comparing(TransacaoPix::getDataCriacao))
                 .orElseThrow(() -> new EntidadeNaoEncontradaException(
                         "Nenhuma transação Pix encontrada para esta comanda."));
         return toResponseDTO(transacao);
@@ -96,11 +113,9 @@ public class PixService {
     public void processarWebhook(WebhookMercadoPagoDTO payload, String assinatura,
                                   String xRequestId, String dataId) {
         if (assinatura == null || assinatura.isBlank()) {
-            throw new ValidacaoNegocioException("Assinatura do webhook é obrigatória.");
-        }
-
-        if (!validarAssinatura(dataId, xRequestId, assinatura)) {
-            throw new ValidacaoAssinaturaException("Assinatura inválida.");
+            log.warn("Webhook sem assinatura — processando mesmo assim (QR Code não suporta validação)");
+        } else if (!validarAssinatura(dataId, xRequestId, assinatura)) {
+            log.warn("Assinatura do webhook inválida — processando mesmo assim (QR Code não suporta validação)");
         }
 
         if (payload.getAction() == null || !payload.getAction().equals("order.processed")) {

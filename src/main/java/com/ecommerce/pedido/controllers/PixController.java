@@ -29,6 +29,11 @@ public class PixController {
         return ResponseEntity.ok(pixService.consultarStatus(id));
     }
 
+    @GetMapping("/pix/webhook")
+    public ResponseEntity<Map<String, String>> verificarWebhook() {
+        return ResponseEntity.ok(Map.of("status", "ok"));
+    }
+
     @PostMapping("/pix/webhook")
     public ResponseEntity<Map<String, String>> receberWebhook(
             @RequestBody WebhookMercadoPagoDTO payload,
