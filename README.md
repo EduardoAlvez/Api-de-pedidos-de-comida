@@ -1,7 +1,7 @@
 # 🍔 API de Pedidos de Comida
 
 API RESTful completa para sistema de delivery de comida **e comanda digital** (atendimento presencial), desenvolvida com **Spring Boot 3.3.1**.  
-O projeto abrange desde cadastro de usuários e restaurantes até criação de pedidos, autenticação via **JWT**, **frete dinâmico por região** e **comanda eletrônica** com rateio de itens compartilhados.
+O projeto abrange desde cadastro de usuários e restaurantes até criação de pedidos, autenticação via **JWT**, **frete dinâmico por região**, **comanda eletrônica** com rateio de itens compartilhados e **pagamento via Pix** com integração Mercado Pago.
 
 ---
 
@@ -54,12 +54,20 @@ API back-end que simula o funcionamento de um aplicativo de delivery **com supor
 - **Fechamento individual**: cada cliente paga sua comanda e sai sem precisar dividir igualmente
 - Mesa só fica `LIVRE` quando **todas** as comandas estão pagas
 
+### ✅ Pagamento Pix (Mercado Pago)
+- Geração de **QR Code Pix dinâmico** via SDK oficial do Mercado Pago
+- Três formas de pagamento: **Pix**, **Maquininha** e **Dinheiro**
+- **Webhook** com verificação HMAC-SHA256 para confirmação automática de pagamento Pix
+- Cálculo inteligente do valor Pix (`saldoRestante = valorTotal - totalRateios`)
+- Consulta de status da transação Pix (`AGUARDANDO`, `CONFIRMADO`, `EXPIROU`)
+- Suporte a **pagamento parcial**: cliente paga parte com maquininha/dinheiro e o restante com Pix
+
 ### ✅ Tratamento de Exceções
 - Exceções personalizadas para erros de negócio (`ValidacaoNegocioException`)
 - Handler global com `@ControllerAdvice` para respostas padronizadas
 
 ### ✅ Testes Automatizados
-- **36 testes** no total (18 unitários + 18 integração)
+- **49 testes** no total (28 unitários + 21 integração)
 - Unitários: JUnit 5 + Mockito (camada service)
 - Integração: REST Assured + Spring MockMvc (camada controller)
 - Relatórios com **Allure** (comportamento + severidade + steps)
@@ -147,7 +155,10 @@ Todos os endpoints, exceto `/login`, requerem **token JWT** no cabeçalho `Autho
 | `GET` | `/API/V1/comandas` | Listar comandas (filtro: `?mesaId=`) |
 | `GET` | `/API/V1/comandas/{id}` | Buscar comanda por ID |
 | `POST` | `/API/V1/comandas/{id}/rateio` | Ratear item compartilhado na comanda |
-| `POST` | `/API/V1/comandas/{id}/fechar` | Fechar comanda (pagamento) |
+| `POST` | `/API/V1/comandas/{id}/fechar` | Fechar comanda (Maquininha/Dinheiro) |
+| `POST` | `/API/V1/comandas/{id}/pix` | Gerar QR Code Pix para comanda |
+| `GET` | `/API/V1/comandas/{id}/pix` | Consultar status da transação Pix |
+| `POST` | `/API/V1/pix/webhook` | Webhook do Mercado Pago (confirmação automática) |
 
 ---
 
@@ -161,6 +172,7 @@ Todos os endpoints, exceto `/login`, requerem **token JWT** no cabeçalho `Autho
 | **Web** | Spring Web |
 | **Segurança** | Spring Security + Auth0 java-jwt 4.4.0 |
 | **Documentação** | SpringDoc OpenAPI 2.3.0 (Swagger) |
+| **Pagamento Pix** | Mercado Pago SDK 2.x (QR Code dinâmico + webhook) |
 | **Banco de Dados** | H2 (dev), MySQL, PostgreSQL |
 | **Build** | Maven |
 | **Testes Unitários** | JUnit 5 + Mockito |
@@ -180,6 +192,7 @@ Todos os endpoints, exceto `/login`, requerem **token JWT** no cabeçalho `Autho
 - **Três Roles de Acesso**: `DONO_RESTAURANTE`, `CLIENTE`, `GARCOM`
 - **Frete Dinâmico**: cada restaurante define regiões com taxas fixas
 - **Comanda Digital**: rateio flexível (valor arbitrário, não divisão igual)
+- **Pagamento Pix**: integração com Mercado Pago via SDK oficial, webhook com HMAC-SHA256
 - **Branch Estratégica**: `master` (produção) + `QA` (testes e validação)
 
 ---
@@ -221,8 +234,8 @@ A API estará em `http://localhost:8080` e o console H2 em `http://localhost:808
 
 ### Stack
 
-- **Unitários**: JUnit 5 + Mockito (18 testes — services)
-- **Integração**: REST Assured + Spring MockMvc (18 testes — controllers)
+- **Unitários**: JUnit 5 + Mockito (28 testes — services)
+- **Integração**: REST Assured + Spring MockMvc (21 testes — controllers)
 - **Relatório de comportamento**: Allure (features, severidades, steps)
 - **Cobertura**: JaCoCo
 - **Implementação assistida**: os testes foram gerados e refinados com auxílio de IA (opencode), acelerando a criação de cenários e garantindo aderência às especificações do projeto
