@@ -3,6 +3,7 @@ package com.ecommerce.pedido.controllers.exceptions;
 import com.ecommerce.pedido.dtos.excpetions.ValidationError;
 import com.ecommerce.pedido.services.exceptions.EmailCadastradoExcption;
 import com.ecommerce.pedido.services.exceptions.EntidadeNaoEncontradaException;
+import com.ecommerce.pedido.services.exceptions.ValidacaoAssinaturaException;
 import com.ecommerce.pedido.services.exceptions.ValidacaoNegocioException;
 import com.ecommerce.pedido.services.exceptions.dtos.StandardError;
 import jakarta.servlet.http.HttpServletRequest;
@@ -40,6 +41,19 @@ public class ResourceExceptionHandler {
                 Instant.now(),
                 status.value(),
                 "Erro na validação",
+                e.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(status).body(err);
+    }
+
+    @ExceptionHandler(ValidacaoAssinaturaException.class)
+    public ResponseEntity<StandardError> validacaoAssinatura(ValidacaoAssinaturaException e, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.UNAUTHORIZED; // 401
+        StandardError err = new StandardError(
+                Instant.now(),
+                status.value(),
+                "Assinatura inválida",
                 e.getMessage(),
                 request.getRequestURI()
         );

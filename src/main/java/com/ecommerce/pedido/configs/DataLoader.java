@@ -47,6 +47,9 @@ public class DataLoader implements CommandLineRunner {
     @Autowired
     private ComandaRepository comandaRepository;
 
+    @Autowired
+    private TransacaoPixRepository transacaoPixRepository;
+
     @Override
     @Transactional
     public void run(String... args) throws Exception {
@@ -161,6 +164,22 @@ public class DataLoader implements CommandLineRunner {
                 criarItemComanda(1, feijoada, false),
                 criarItemComanda(1, refrigerante, true)
         ));
+
+        // 9. CRIAR TRANSAÇÃO PIX DE EXEMPLO (se não existir)
+        List<Comanda> comandas = comandaRepository.findAllByMesa_IdOrderByDataAberturaDesc(mesa1.getId());
+        if (!comandas.isEmpty() && transacaoPixRepository.findByComanda_Id(comandas.get(0).getId()).isEmpty()) {
+            TransacaoPix transacao = new TransacaoPix();
+            transacao.setComanda(comandas.get(0));
+            transacao.setValor(comandas.get(0).getValorTotal());
+            transacao.setQrCodeBase64("iVBORw0KGgoAAAANSUhEUgAA..."); // QR Code exemplo
+            transacao.setPayloadCopiaCola("00020126580014br.gov.bcb.pix0136examplepixkey@mercadopago.com5204000053039865404" +
+                    comandas.get(0).getValorTotal().multiply(BigDecimal.valueOf(100)).toBigInteger() +
+                    "5802BR5925ComandaExemplo6009SAOPAULO62070503***6304ABCD");
+            transacao.setTxId("EXAMPLE-TX-" + comandas.get(0).getId());
+            transacao.setStatus(StatusTransacaoPix.AGUARDANDO);
+            transacao.setDataCriacao(LocalDateTime.now());
+            transacaoPixRepository.save(transacao);
+        }
 
         System.out.println("✅ Dados de teste criados com sucesso!");
         System.out.println("📧 Usuários para login:");
