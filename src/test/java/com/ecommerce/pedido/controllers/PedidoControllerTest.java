@@ -27,7 +27,8 @@ class PedidoControllerTest extends BaseControllerTest {
                             "itens": [{"produtoId": 1, "quantidade": 1}],
                             "enderecoDeEntrega": "Rua Teste, 123",
                             "regiaoEntregaId": 1,
-                            "formaDePagamento": "PIX"
+                            "formaDePagamento": "PIX",
+                            "origem": "DELIVERY"
                         }
                         """)
                 .when()
@@ -40,7 +41,7 @@ class PedidoControllerTest extends BaseControllerTest {
     @Test
     @Severity(SeverityLevel.NORMAL)
     @Story("Validação")
-    void deveRetornar422_quandoSemEndereco() {
+    void deveRetornar400_quandoSemEndereco() {
         given()
                 .header("Authorization", "Bearer " + tokenCliente())
                 .contentType(ContentType.JSON)
@@ -49,12 +50,13 @@ class PedidoControllerTest extends BaseControllerTest {
                             "restauranteId": 1,
                             "usuarioId": 1,
                             "itens": [{"produtoId": 1, "quantidade": 1}],
-                            "formaDePagamento": "PIX"
+                            "formaDePagamento": "PIX",
+                            "origem": "DELIVERY"
                         }
                         """)
                 .when()
                 .post("/API/V1/pedidos")
                 .then()
-                .statusCode(422);
+                .statusCode(400);
     }
 }

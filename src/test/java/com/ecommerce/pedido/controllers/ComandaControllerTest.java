@@ -109,6 +109,10 @@ class ComandaControllerTest extends BaseControllerTest {
         Allure.step("Fechar comanda", () -> {
             given()
                     .header("Authorization", "Bearer " + tokenGarcom())
+                    .contentType(ContentType.JSON)
+                    .body("""
+                            { "formaPagamento": "MAQUININHA" }
+                            """)
                     .when()
                     .post("/API/V1/comandas/" + comandaId + "/fechar")
                     .then()

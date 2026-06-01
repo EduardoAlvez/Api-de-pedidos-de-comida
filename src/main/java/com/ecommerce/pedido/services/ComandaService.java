@@ -2,6 +2,7 @@ package com.ecommerce.pedido.services;
 
 import com.ecommerce.pedido.dtos.*;
 import com.ecommerce.pedido.models.*;
+import com.ecommerce.pedido.models.enums.FormaPagamento;
 import com.ecommerce.pedido.models.enums.StatusComanda;
 import com.ecommerce.pedido.models.enums.StatusMesa;
 import com.ecommerce.pedido.repositories.*;
@@ -139,7 +140,7 @@ public class ComandaService {
     }
 
     @Transactional
-    public ComandaResponseDTO fechar(Long comandaId) {
+    public ComandaResponseDTO fechar(Long comandaId, FormaPagamento formaPagamento) {
         Comanda comanda = comandaRepository.findById(comandaId)
                 .orElseThrow(() -> new RestauranteNaoEncontradoException("Comanda não encontrada."));
 
@@ -147,17 +148,21 @@ public class ComandaService {
             throw new ValidacaoNegocioException("Comanda já está paga.");
         }
 
+        if (formaPagamento == FormaPagamento.PIX) {
+            throw new ValidacaoNegocioException("Use o endpoint /pix para gerar QR Code.");
+        }
+
         comanda.setStatus(StatusComanda.PAGA);
         comanda.setDataFechamento(LocalDateTime.now());
         comandaRepository.save(comanda);
 
         // Verifica se todas as comandas da mesa estão PAGA → libera mesa
-        long abertasOuFechadas = comandaRepository.countByMesa_IdAndStatus(
+        long abertasOuPendentes = comandaRepository.countByMesa_IdAndStatus(
                 comanda.getMesa().getId(), StatusComanda.ABERTA);
-        abertasOuFechadas += comandaRepository.countByMesa_IdAndStatus(
-                comanda.getMesa().getId(), StatusComanda.FECHADA);
+        abertasOuPendentes += comandaRepository.countByMesa_IdAndStatus(
+                comanda.getMesa().getId(), StatusComanda.AGUARDANDO_PIX);
 
-        if (abertasOuFechadas == 0) {
+        if (abertasOuPendentes == 0) {
             Mesa mesa = comanda.getMesa();
             mesa.setStatus(StatusMesa.LIVRE);
             mesaRepository.save(mesa);

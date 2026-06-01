@@ -84,9 +84,9 @@ class SecurityTest extends BaseControllerTest {
                             "itens": [{"produtoId": 1, "quantidade": 1}],
                             "enderecoDeEntrega": "Rua Teste, 123",
                             "regiaoEntregaId": 1,
-                            "formaDePagamento": "PIX"
-                        }
-                        """)
+                        "formaDePagamento": "PIX",
+                        "origem": "DELIVERY"
+                        }""")
                 .when()
                 .post("/API/V1/pedidos")
                 .then()

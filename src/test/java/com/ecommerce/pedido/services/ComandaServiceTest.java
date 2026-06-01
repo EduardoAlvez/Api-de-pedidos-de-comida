@@ -5,6 +5,7 @@ import com.ecommerce.pedido.dtos.ComandaRequestDTO;
 import com.ecommerce.pedido.dtos.ComandaResponseDTO;
 import com.ecommerce.pedido.dtos.RateioRequestDTO;
 import com.ecommerce.pedido.models.*;
+import com.ecommerce.pedido.models.enums.FormaPagamento;
 import com.ecommerce.pedido.models.enums.StatusComanda;
 import com.ecommerce.pedido.models.enums.StatusMesa;
 import com.ecommerce.pedido.repositories.*;
@@ -240,10 +241,10 @@ class ComandaServiceTest extends BaseServiceTest {
 
         when(comandaRepository.findById(1L)).thenReturn(Optional.of(comanda));
         when(comandaRepository.countByMesa_IdAndStatus(1L, StatusComanda.ABERTA)).thenReturn(0L);
-        when(comandaRepository.countByMesa_IdAndStatus(1L, StatusComanda.FECHADA)).thenReturn(0L);
+        when(comandaRepository.countByMesa_IdAndStatus(1L, StatusComanda.AGUARDANDO_PIX)).thenReturn(0L);
         when(comandaRepository.save(any(Comanda.class))).thenReturn(comanda);
 
-        ComandaResponseDTO response = comandaService.fechar(1L);
+        ComandaResponseDTO response = comandaService.fechar(1L, FormaPagamento.DINHEIRO);
 
         assertNotNull(response);
         assertEquals(StatusComanda.PAGA, comanda.getStatus());
@@ -262,7 +263,7 @@ class ComandaServiceTest extends BaseServiceTest {
         when(comandaRepository.findById(1L)).thenReturn(Optional.of(comanda));
 
         assertThrows(ValidacaoNegocioException.class,
-                () -> comandaService.fechar(1L));
+                () -> comandaService.fechar(1L, FormaPagamento.DINHEIRO));
     }
 
     @Test
@@ -274,10 +275,10 @@ class ComandaServiceTest extends BaseServiceTest {
 
         when(comandaRepository.findById(1L)).thenReturn(Optional.of(comanda));
         when(comandaRepository.countByMesa_IdAndStatus(1L, StatusComanda.ABERTA)).thenReturn(1L);
-        when(comandaRepository.countByMesa_IdAndStatus(1L, StatusComanda.FECHADA)).thenReturn(0L);
+        when(comandaRepository.countByMesa_IdAndStatus(1L, StatusComanda.AGUARDANDO_PIX)).thenReturn(0L);
         when(comandaRepository.save(any(Comanda.class))).thenReturn(comanda);
 
-        ComandaResponseDTO response = comandaService.fechar(1L);
+        ComandaResponseDTO response = comandaService.fechar(1L, FormaPagamento.DINHEIRO);
 
         assertNotNull(response);
         assertEquals(StatusComanda.PAGA, comanda.getStatus());
