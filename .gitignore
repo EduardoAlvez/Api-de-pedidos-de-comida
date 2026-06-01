@@ -35,3 +35,9 @@ build/
 ### OpenCode / OpenSpec (local only) ###
 .opencode/
 openspec/
+
+### Artefatos / documentos auxiliares ###
+artefatos/
+
+### Credenciais locais ###
+mercadopago.txt

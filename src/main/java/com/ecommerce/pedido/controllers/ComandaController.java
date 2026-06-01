@@ -2,6 +2,7 @@ package com.ecommerce.pedido.controllers;
 
 import com.ecommerce.pedido.dtos.ComandaRequestDTO;
 import com.ecommerce.pedido.dtos.ComandaResponseDTO;
+import com.ecommerce.pedido.dtos.FecharComandaRequestDTO;
 import com.ecommerce.pedido.dtos.RateioRequestDTO;
 import com.ecommerce.pedido.models.Usuario;
 import com.ecommerce.pedido.repositories.UsuarioRepository;
@@ -54,7 +55,9 @@ public class ComandaController {
     }
 
     @PostMapping("/comandas/{id}/fechar")
-    public ResponseEntity<ComandaResponseDTO> fecharComanda(@PathVariable Long id) {
-        return ResponseEntity.ok(comandaService.fechar(id));
+    public ResponseEntity<ComandaResponseDTO> fecharComanda(
+            @PathVariable Long id,
+            @Valid @RequestBody FecharComandaRequestDTO requestDTO) {
+        return ResponseEntity.ok(comandaService.fechar(id, requestDTO.getFormaPagamento()));
     }
 }
