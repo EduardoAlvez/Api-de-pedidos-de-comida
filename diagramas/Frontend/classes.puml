@@ -1,0 +1,78 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+class Mesa {
+  - long id
+  - int numero
+  - String nomeCliente
+  - String status
+  - String dataAbertura
+  - double totalPedido
+}
+
+class Comanda {
+  - int mesaId
+  - double total
+  - List<ItemComanda> itens
+}
+
+class ItemComanda {
+  - int type
+  - String productName
+  - String productNote
+  - String dividedChip
+  - int qtd
+  - double preco
+  - int pessoasDividido
+  - boolean isShared
+  - double valorPago
+  - String personName
+  - String personRole
+  + sectionPerson(name, role)
+  + orderProduct(...)
+}
+
+class Produto {
+  - long id
+  - String nome
+  - String descricao
+  - double preco
+  - String categoria
+  - String imageUrl
+  - boolean disponivel
+}
+
+class CartItem {
+  - Produto produto
+  - int quantidade
+  - String observacao
+  + double getTotalPrice()
+}
+
+class ClientOption {
+  - String id
+  - String name
+  - ClientRole role
+  - Type type
+}
+
+class MesaResponse {
+  - long id
+  - String nomeCliente
+  - String status
+  - String dataAbertura
+  - long restauranteId
+}
+
+class LoginResponse {
+  - String token
+  - String type
+}
+
+Mesa "1" -- "*" ItemComanda : contém
+Comanda "1" -- "*" ItemComanda : agrega
+CartItem --> Produto
+MesaResponse --> Mesa : <<resposta API>>
+LoginResponse --> Comanda : <<autenticação>>
+ItemComanda --> ClientOption : seção por pessoa
+@enduml

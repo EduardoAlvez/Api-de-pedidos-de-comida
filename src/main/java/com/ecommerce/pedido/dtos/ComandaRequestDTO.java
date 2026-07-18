@@ -16,6 +16,5 @@ public class ComandaRequestDTO {
     private String clienteNome;
 
     @Valid
-    @NotEmpty(message = "A lista de itens não pode estar vazia.")
     private List<ComandaItemRequestDTO> itens;
 }

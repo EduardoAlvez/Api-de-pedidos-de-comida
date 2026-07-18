@@ -4,12 +4,15 @@ import com.ecommerce.pedido.dtos.ProdutoRequestDTO;
 import com.ecommerce.pedido.dtos.ProdutoResponseDTO;
 import com.ecommerce.pedido.models.Produto;
 import com.ecommerce.pedido.models.Restaurante;
+import com.ecommerce.pedido.models.Usuario;
+import com.ecommerce.pedido.models.enums.Role;
 import com.ecommerce.pedido.repositories.ProdutoRepository;
 import com.ecommerce.pedido.repositories.RestauranteRepository;
+import com.ecommerce.pedido.services.exceptions.EntidadeNaoEncontradaException;
 import com.ecommerce.pedido.services.exceptions.ProdutoNaoEncontradoException;
 import com.ecommerce.pedido.services.exceptions.RestauranteNaoEncontradoException;
+import com.ecommerce.pedido.services.exceptions.ValidacaoNegocioException;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,10 +53,19 @@ public class ProdutoService {
     }
 
     @Transactional(readOnly = true)
-    public List<ProdutoResponseDTO> listarPorRestaurante(Long restauranteId) {
-        // Garante que o restaurante existe antes de listar seus produtos.
+    public List<ProdutoResponseDTO> listarPorRestaurante(Long restauranteId, Usuario usuarioLogado) {
         if (!restauranteRepository.existsById(restauranteId)) {
             throw new RestauranteNaoEncontradoException("Restaurante não encontrado com o ID: " + restauranteId);
+        }
+
+        if (usuarioLogado != null && usuarioLogado.getTipo() != Role.CLIENTE) {
+            Restaurante restauranteVinculado = usuarioLogado.getRestauranteVinculado();
+            if (restauranteVinculado == null) {
+                throw new ValidacaoNegocioException("Usuario nao vinculado a nenhum restaurante.");
+            }
+            if (!restauranteVinculado.getId().equals(restauranteId)) {
+                throw new EntidadeNaoEncontradaException("Restaurante não encontrado com o ID: " + restauranteId);
+            }
         }
 
         List<Produto> produtos = produtoRepository.findAllByRestaurante_Id(restauranteId);

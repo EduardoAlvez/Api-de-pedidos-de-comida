@@ -1,0 +1,37 @@
+@startuml
+title Fluxo - Abertura de Mesa e Comandas
+
+start
+
+:Garçom faz login;
+:GET /API/V1/restaurantes\ndescobre restauranteId;
+:GET /API/V1/mesas\nlista mesas do restaurante;
+
+repeat
+  :Seleciona ação;
+
+  fork
+    :Abrir Mesa;
+    :POST /API/V1/mesas\n{ restauranteId, nomeCliente };
+    :Mesa criada (status=LIVRE);
+    :Mesa aparece na lista;
+  fork again
+    :Criar Comanda;
+    :POST /API/V1/mesas/{id}/comandas\n{ clienteNome, itens[] };
+    :Mesa muda para OCUPADA\n(se estava LIVRE);
+    :Status comanda = ABERTA;
+  fork again
+    :Adicionar Item\nda comanda;
+    :POST /API/V1/comandas/{id}/itens\n{ produtoId, quantidade };
+    :Item adicionado\nvalorTotal atualizado;
+  fork again
+    :Adicionar Item\nCompartilhado na Mesa;
+    :POST /API/V1/mesas/{id}/compartilhados\n{ produtoId, quantidade };
+    :Item aparece no pool\nda mesa;
+  end fork
+
+repeat while (Mais ações?)
+
+:Visualizar mesas e comandas;
+stop
+@enduml

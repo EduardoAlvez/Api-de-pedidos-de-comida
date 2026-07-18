@@ -1,0 +1,34 @@
+@startuml
+actor Garcom as G
+participant ComandaActivity as CA
+participant FecharContaDialog as FCD
+participant PagamentoPresencialDialog as PPD
+participant PixDialog as PXD
+participant RateioDialog as RD
+
+alt Presencial
+  G -> CA: clica "Fechar Conta"
+  CA -> FCD: show()
+  FCD -> FCD: exibe opções
+  G -> FCD: seleciona "Presencial"
+  FCD -> PPD: show()
+  G -> PPD: seleciona forma (dinheiro/cartão/máquina)
+  PPD -> CA: onPagamentoConfirmado()
+  CA -> CA: marcarTodosPagos()
+  CA --> G: Toast de confirmação
+
+else PIX
+  FCD -> PXD: show()
+  PXD -> PXD: exibe QR Code
+  G -> PXD: confirma pagamento
+  PXD -> CA: onPixConfirmado()
+  CA -> CA: marcarTodosPagos()
+
+else Rateio
+  FCD -> RD: show()
+  RD -> RD: seleciona itens e valores
+  G -> RD: confirma rateio
+  RD -> CA: onRateioConfirmado()
+  CA -> CA: marcarPagosDaPessoa()
+end
+@enduml

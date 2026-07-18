@@ -4,10 +4,13 @@ import com.ecommerce.pedido.dtos.MesaRequestDTO;
 import com.ecommerce.pedido.dtos.MesaResponseDTO;
 import com.ecommerce.pedido.models.Mesa;
 import com.ecommerce.pedido.models.Restaurante;
+import com.ecommerce.pedido.models.Usuario;
+import com.ecommerce.pedido.models.enums.Role;
 import com.ecommerce.pedido.models.enums.StatusMesa;
+import com.ecommerce.pedido.repositories.ComandaRepository;
 import com.ecommerce.pedido.repositories.MesaRepository;
 import com.ecommerce.pedido.repositories.RestauranteRepository;
-import com.ecommerce.pedido.services.exceptions.RestauranteNaoEncontradoException;
+import com.ecommerce.pedido.services.exceptions.EntidadeNaoEncontradaException;
 import io.qameta.allure.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,10 +33,14 @@ class MesaServiceTest extends BaseServiceTest {
     @Mock
     private RestauranteRepository restauranteRepository;
 
+    @Mock
+    private ComandaRepository comandaRepository;
+
     @InjectMocks
     private MesaService mesaService;
 
     private Restaurante restaurante;
+    private Usuario usuarioLogado;
     private MesaRequestDTO requestValido;
 
     @BeforeEach
@@ -41,6 +48,11 @@ class MesaServiceTest extends BaseServiceTest {
         restaurante = new Restaurante();
         restaurante.setId(1L);
         restaurante.setNome("Restaurante Teste");
+
+        usuarioLogado = new Usuario();
+        usuarioLogado.setId(2L);
+        usuarioLogado.setTipo(Role.GARCOM);
+        usuarioLogado.setRestauranteTrabalho(restaurante);
 
         requestValido = new MesaRequestDTO();
         requestValido.setNomeCliente("Cliente Teste");
@@ -51,8 +63,6 @@ class MesaServiceTest extends BaseServiceTest {
     @Severity(SeverityLevel.BLOCKER)
     @Story("Criação")
     void deveCriarMesaComDadosValidos() {
-        when(restauranteRepository.findById(1L)).thenReturn(Optional.of(restaurante));
-
         Mesa mesaSalva = new Mesa();
         mesaSalva.setId(1L);
         mesaSalva.setNomeCliente("Cliente Teste");
@@ -61,7 +71,7 @@ class MesaServiceTest extends BaseServiceTest {
 
         when(mesaRepository.save(any(Mesa.class))).thenReturn(mesaSalva);
 
-        MesaResponseDTO response = mesaService.criar(requestValido);
+        MesaResponseDTO response = mesaService.criar(requestValido, usuarioLogado);
 
         assertNotNull(response);
         assertEquals("Cliente Teste", response.getNomeCliente());
@@ -80,7 +90,7 @@ class MesaServiceTest extends BaseServiceTest {
 
         when(mesaRepository.findById(1L)).thenReturn(Optional.of(mesa));
 
-        MesaResponseDTO response = mesaService.buscarPorId(1L);
+        MesaResponseDTO response = mesaService.buscarPorId(1L, usuarioLogado);
 
         assertNotNull(response);
         assertEquals(1L, response.getId());
@@ -93,7 +103,7 @@ class MesaServiceTest extends BaseServiceTest {
     void deveLancarExcecao_quandoBuscarMesaPorIdInexistente() {
         when(mesaRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(RestauranteNaoEncontradoException.class,
-                () -> mesaService.buscarPorId(99L));
+        assertThrows(EntidadeNaoEncontradaException.class,
+                () -> mesaService.buscarPorId(99L, usuarioLogado));
     }
 }

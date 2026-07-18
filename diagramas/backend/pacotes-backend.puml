@@ -1,0 +1,78 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam defaultFontSize 12
+
+package "External Systems" {
+  [Mercado Pago API] as MP
+  [Banco de Dados (H2/PostgreSQL)] as DB
+}
+
+package "Spring Boot Application" as APP {
+
+  rectangle "Controllers" as CTRL {
+    component "AutenticacaoController" as C1
+    component "MesaController" as C2
+    component "ComandaController" as C3
+    component "ProdutoController" as C4
+    component "PedidoController" as C5
+    component "RestauranteController" as C6
+    component "UsuarioController" as C7
+    component "PixController" as C8
+    component "GarcomController" as C9
+    component "RegiaoEntregaController" as C10
+  }
+
+  rectangle "Services" as SERV {
+    component "ComandaService" as S1
+    component "MesaService" as S2
+    component "ItemCompartilhadoService" as S3
+    component "PedidoService" as S4
+    component "PixService" as S5
+    component "ProdutoService" as S6
+    component "RestauranteService" as S7
+    component "UsuarioService" as S8
+    component "VinculoGarcomService" as S9
+    component "RegiaoEntregaService" as S10
+  }
+
+  rectangle "Clients" as CLI {
+    component "MercadoPagoPixClient" as CL1
+    component "PixClient (interface)" as CL2
+  }
+
+  rectangle "Repositories (Spring Data JPA)" as REPO {
+    component "MesaRepository" as R1
+    component "ComandaRepository" as R2
+    component "ComandaItemRepository" as R3
+    component "ComandaRateioRepository" as R4
+    component "ItemCompartilhadoRepository" as R5
+    component "ProdutoRepository" as R6
+    component "PedidoRepository" as R7
+    component "UsuarioRepository" as R8
+    component "RestauranteRepository" as R9
+    component "TransacaoPixRepository" as R10
+    component "PagamentoRepository" as R11
+    component "ItemPedidoRepository" as R12
+    component "RegiaoEntregaRepository" as R13
+  }
+
+  rectangle "Security" as SEC {
+    component "SecurityConfig"
+    component "SecurityFilter"
+    component "SecurityUtils"
+  }
+
+  rectangle "Config" as CFG {
+    component "DataLoader"
+    component "MercadoPagoConfigSetup"
+  }
+
+  DB --> REPO : JPA/Hibernate
+  REPO --> SERV : injecão
+  SERV --> CLI : delegacão
+  CLI --> MP : HTTP REST
+  CTRL --> SERV : injecão
+  SEC ..> CTRL : filtra requisicões
+}
+
+@enduml

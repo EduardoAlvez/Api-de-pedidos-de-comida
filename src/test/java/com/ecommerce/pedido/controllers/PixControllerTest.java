@@ -118,7 +118,7 @@ class PixControllerTest extends BaseControllerTest {
     @Test
     @Order(5)
     @Severity(SeverityLevel.NORMAL)
-    void deveRejeitarWebhook_comAssinaturaInvalida() {
+    void deveRetornar401_quandoWebhookComAssinaturaInvalida() {
         String body = """
                 {
                     "action": "order.processed",

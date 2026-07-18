@@ -6,6 +6,7 @@ import com.ecommerce.pedido.dtos.ComandaResponseDTO;
 import com.ecommerce.pedido.dtos.RateioRequestDTO;
 import com.ecommerce.pedido.models.*;
 import com.ecommerce.pedido.models.enums.FormaPagamento;
+import com.ecommerce.pedido.models.enums.Role;
 import com.ecommerce.pedido.models.enums.StatusComanda;
 import com.ecommerce.pedido.models.enums.StatusMesa;
 import com.ecommerce.pedido.repositories.*;
@@ -46,12 +47,16 @@ class ComandaServiceTest extends BaseServiceTest {
     @Mock
     private ComandaRateioRepository comandaRateioRepository;
 
+    @Mock
+    private ComandaItemRepository comandaItemRepository;
+
     @InjectMocks
     private ComandaService comandaService;
 
     private Mesa mesaLivre;
     private Mesa mesaOcupada;
     private Usuario garcom;
+    private Restaurante restaurante;
     private Produto feijoada;
     private Produto refri;
     private ComandaRequestDTO requestDTO;
@@ -59,20 +64,28 @@ class ComandaServiceTest extends BaseServiceTest {
 
     @BeforeEach
     void setUp() {
+        restaurante = new Restaurante();
+        restaurante.setId(1L);
+        restaurante.setNome("Restaurante Teste");
+
         mesaLivre = new Mesa();
         mesaLivre.setId(1L);
         mesaLivre.setNomeCliente("Teste");
         mesaLivre.setStatus(StatusMesa.LIVRE);
+        mesaLivre.setRestaurante(restaurante);
 
         mesaOcupada = new Mesa();
         mesaOcupada.setId(2L);
         mesaOcupada.setNomeCliente("Teste");
         mesaOcupada.setStatus(StatusMesa.OCUPADA);
+        mesaOcupada.setRestaurante(restaurante);
 
         garcom = new Usuario();
         garcom.setId(1L);
         garcom.setNome("Garcom Teste");
         garcom.setEmail("garcom@teste.com");
+        garcom.setTipo(Role.GARCOM);
+        garcom.setRestauranteTrabalho(restaurante);
 
         feijoada = new Produto();
         feijoada.setId(1L);
@@ -87,8 +100,6 @@ class ComandaServiceTest extends BaseServiceTest {
         ComandaItemRequestDTO item1 = new ComandaItemRequestDTO();
         item1.setProdutoId(1L);
         item1.setQuantidade(1);
-        item1.setCompartilhado(false);
-
         requestDTO = new ComandaRequestDTO();
         requestDTO.setClienteNome("Joao");
         requestDTO.setItens(List.of(item1));
@@ -179,8 +190,6 @@ class ComandaServiceTest extends BaseServiceTest {
         ComandaItemRequestDTO itemInvalido = new ComandaItemRequestDTO();
         itemInvalido.setProdutoId(99L);
         itemInvalido.setQuantidade(1);
-        itemInvalido.setCompartilhado(false);
-
         ComandaRequestDTO dto = new ComandaRequestDTO();
         dto.setClienteNome("Joao");
         dto.setItens(List.of(itemInvalido));
@@ -207,7 +216,7 @@ class ComandaServiceTest extends BaseServiceTest {
         when(comandaRateioRepository.save(any(ComandaRateio.class))).thenReturn(new ComandaRateio());
         when(comandaRepository.save(any(Comanda.class))).thenReturn(comanda);
 
-        ComandaResponseDTO response = comandaService.rateio(1L, rateioDTO);
+        ComandaResponseDTO response = comandaService.rateio(1L, rateioDTO, garcom);
 
         assertNotNull(response);
         verify(comandaRateioRepository).save(any(ComandaRateio.class));
@@ -229,7 +238,7 @@ class ComandaServiceTest extends BaseServiceTest {
         rateioDTO.setValorPago(new BigDecimal("999.00"));
 
         assertThrows(ValidacaoNegocioException.class,
-                () -> comandaService.rateio(1L, rateioDTO));
+                () -> comandaService.rateio(1L, rateioDTO, garcom));
     }
 
     @Test
@@ -244,7 +253,7 @@ class ComandaServiceTest extends BaseServiceTest {
         when(comandaRepository.countByMesa_IdAndStatus(1L, StatusComanda.AGUARDANDO_PIX)).thenReturn(0L);
         when(comandaRepository.save(any(Comanda.class))).thenReturn(comanda);
 
-        ComandaResponseDTO response = comandaService.fechar(1L, FormaPagamento.DINHEIRO);
+        ComandaResponseDTO response = comandaService.fechar(1L, FormaPagamento.DINHEIRO, garcom);
 
         assertNotNull(response);
         assertEquals(StatusComanda.PAGA, comanda.getStatus());
@@ -263,7 +272,7 @@ class ComandaServiceTest extends BaseServiceTest {
         when(comandaRepository.findById(1L)).thenReturn(Optional.of(comanda));
 
         assertThrows(ValidacaoNegocioException.class,
-                () -> comandaService.fechar(1L, FormaPagamento.DINHEIRO));
+                () -> comandaService.fechar(1L, FormaPagamento.DINHEIRO, garcom));
     }
 
     @Test
@@ -278,7 +287,7 @@ class ComandaServiceTest extends BaseServiceTest {
         when(comandaRepository.countByMesa_IdAndStatus(1L, StatusComanda.AGUARDANDO_PIX)).thenReturn(0L);
         when(comandaRepository.save(any(Comanda.class))).thenReturn(comanda);
 
-        ComandaResponseDTO response = comandaService.fechar(1L, FormaPagamento.DINHEIRO);
+        ComandaResponseDTO response = comandaService.fechar(1L, FormaPagamento.DINHEIRO, garcom);
 
         assertNotNull(response);
         assertEquals(StatusComanda.PAGA, comanda.getStatus());
@@ -290,6 +299,15 @@ class ComandaServiceTest extends BaseServiceTest {
         Mesa mesa = new Mesa();
         mesa.setId(1L);
         mesa.setStatus(StatusMesa.OCUPADA);
+        mesa.setRestaurante(restaurante);
+
+        // Adiciona item compartilhado na mesa para os testes de rateio
+        ItemCompartilhado itemCompartilhado = new ItemCompartilhado();
+        itemCompartilhado.setId(1L);
+        itemCompartilhado.setProduto(refri);
+        itemCompartilhado.setQuantidade(1);
+        itemCompartilhado.setPrecoUnitario(new BigDecimal("12.00"));
+        mesa.setItensCompartilhados(List.of(itemCompartilhado));
 
         List<ComandaItem> itens = new ArrayList<>();
         ComandaItem item = new ComandaItem();
@@ -297,7 +315,6 @@ class ComandaServiceTest extends BaseServiceTest {
         item.setProduto(refri);
         item.setQuantidade(1);
         item.setPrecoUnitario(new BigDecimal("12.00"));
-        item.setCompartilhado(true);
         itens.add(item);
 
         Comanda comanda = new Comanda();

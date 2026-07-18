@@ -42,6 +42,8 @@ openspec/
 
 ### Artefatos / documentos auxiliares ###
 artefatos/
+docs/
 
 ### Credenciais locais ###
 mercadopago.txt
+secrets.properties

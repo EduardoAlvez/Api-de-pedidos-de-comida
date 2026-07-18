@@ -11,4 +11,6 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
 
     //pedidos de um usuario específico, ordenando pelos mais recentes.
     List<Pedido> findAllByUsuario_IdOrderByDataDoPedidoDesc(Long usuarioId);
+
+    List<Pedido> findAllByRestaurante_IdOrderByDataDoPedidoDesc(Long restauranteId);
 }

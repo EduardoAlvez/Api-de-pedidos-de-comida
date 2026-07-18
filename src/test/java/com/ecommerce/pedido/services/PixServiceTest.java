@@ -4,6 +4,7 @@ import com.ecommerce.pedido.configs.MercadoPagoConfigSetup;
 import com.ecommerce.pedido.dtos.PixResponseDTO;
 import com.ecommerce.pedido.dtos.WebhookMercadoPagoDTO;
 import com.ecommerce.pedido.models.*;
+import com.ecommerce.pedido.models.enums.Role;
 import com.ecommerce.pedido.models.enums.StatusComanda;
 import com.ecommerce.pedido.models.enums.StatusMesa;
 import com.ecommerce.pedido.models.enums.StatusTransacaoPix;
@@ -42,8 +43,10 @@ class PixServiceTest extends BaseServiceTest {
     private TransacaoPixRepository transacaoPixRepository;
     private PixService pixService;
 
+    private Usuario usuarioLogado;
     private Comanda comanda;
     private Mesa mesa;
+    private Restaurante restaurante;
     private PixClient.CriarCobrancaResult resultadoSucesso;
 
     @BeforeEach
@@ -58,9 +61,19 @@ class PixServiceTest extends BaseServiceTest {
         pixService = new PixService(pixClient, comandaRepository,
                 transacaoPixRepository, config);
 
+        restaurante = new Restaurante();
+        restaurante.setId(1L);
+        restaurante.setNome("Restaurante Teste");
+
+        usuarioLogado = new Usuario();
+        usuarioLogado.setId(2L);
+        usuarioLogado.setTipo(Role.GARCOM);
+        usuarioLogado.setRestauranteTrabalho(restaurante);
+
         mesa = new Mesa();
         mesa.setId(1L);
         mesa.setStatus(StatusMesa.OCUPADA);
+        mesa.setRestaurante(restaurante);
 
         comanda = new Comanda();
         comanda.setId(1L);
@@ -81,7 +94,7 @@ class PixServiceTest extends BaseServiceTest {
     @Severity(SeverityLevel.BLOCKER)
     void deveGerarQrCode_quandoComandaEstaAberta() {
         when(comandaRepository.findById(1L)).thenReturn(Optional.of(comanda));
-        when(transacaoPixRepository.findByComanda_Id(1L)).thenReturn(Optional.empty());
+        when(transacaoPixRepository.findAllByComanda_Id(1L)).thenReturn(List.of());
         when(pixClient.criarCobranca(new BigDecimal("60.00"), "Comanda #1"))
                 .thenReturn(resultadoSucesso);
         when(transacaoPixRepository.save(any(TransacaoPix.class)))
@@ -89,7 +102,7 @@ class PixServiceTest extends BaseServiceTest {
         when(comandaRepository.save(any(Comanda.class)))
                 .thenAnswer(i -> i.getArgument(0));
 
-        PixResponseDTO response = pixService.gerarQrCode(1L);
+        PixResponseDTO response = pixService.gerarQrCode(1L, usuarioLogado);
 
         assertNotNull(response);
         assertEquals("TX-12345", response.getTxId());
@@ -106,7 +119,7 @@ class PixServiceTest extends BaseServiceTest {
         comanda.setRateios(List.of(rateio));
 
         when(comandaRepository.findById(1L)).thenReturn(Optional.of(comanda));
-        when(transacaoPixRepository.findByComanda_Id(1L)).thenReturn(Optional.empty());
+        when(transacaoPixRepository.findAllByComanda_Id(1L)).thenReturn(List.of());
         when(pixClient.criarCobranca(new BigDecimal("40.00"), "Comanda #1"))
                 .thenReturn(resultadoSucesso);
         when(transacaoPixRepository.save(any(TransacaoPix.class)))
@@ -114,7 +127,7 @@ class PixServiceTest extends BaseServiceTest {
         when(comandaRepository.save(any(Comanda.class)))
                 .thenAnswer(i -> i.getArgument(0));
 
-        PixResponseDTO response = pixService.gerarQrCode(1L);
+        PixResponseDTO response = pixService.gerarQrCode(1L, usuarioLogado);
 
         assertNotNull(response);
         assertEquals(new BigDecimal("40.00"), response.getValor());
@@ -130,7 +143,7 @@ class PixServiceTest extends BaseServiceTest {
         when(comandaRepository.findById(1L)).thenReturn(Optional.of(comanda));
 
         assertThrows(ValidacaoNegocioException.class,
-                () -> pixService.gerarQrCode(1L));
+                () -> pixService.gerarQrCode(1L, usuarioLogado));
     }
 
     @Test
@@ -141,7 +154,7 @@ class PixServiceTest extends BaseServiceTest {
         when(comandaRepository.findById(1L)).thenReturn(Optional.of(comanda));
 
         assertThrows(ValidacaoNegocioException.class,
-                () -> pixService.gerarQrCode(1L));
+                () -> pixService.gerarQrCode(1L, usuarioLogado));
     }
 
     @Test
@@ -158,9 +171,9 @@ class PixServiceTest extends BaseServiceTest {
         comanda.setStatus(StatusComanda.AGUARDANDO_PIX);
 
         when(comandaRepository.findById(1L)).thenReturn(Optional.of(comanda));
-        when(transacaoPixRepository.findByComanda_Id(1L)).thenReturn(Optional.of(existente));
+        when(transacaoPixRepository.findAllByComanda_Id(1L)).thenReturn(List.of(existente));
 
-        PixResponseDTO response = pixService.gerarQrCode(1L);
+        PixResponseDTO response = pixService.gerarQrCode(1L, usuarioLogado);
 
         assertNotNull(response);
         assertEquals("TX-12345", response.getTxId());
@@ -215,10 +228,11 @@ class PixServiceTest extends BaseServiceTest {
         transacao.setStatus(StatusTransacaoPix.CONFIRMADO);
         transacao.setDataConfirmacao(LocalDateTime.now());
 
-        when(transacaoPixRepository.findByComanda_Id(1L))
-                .thenReturn(Optional.of(transacao));
+        when(comandaRepository.findById(1L)).thenReturn(Optional.of(comanda));
+        when(transacaoPixRepository.findAllByComanda_Id(1L))
+                .thenReturn(List.of(transacao));
 
-        PixResponseDTO response = pixService.consultarStatus(1L);
+        PixResponseDTO response = pixService.consultarStatus(1L, usuarioLogado);
 
         assertNotNull(response);
         assertEquals(StatusTransacaoPix.CONFIRMADO, response.getStatus());
@@ -227,16 +241,17 @@ class PixServiceTest extends BaseServiceTest {
     @Test
     @Severity(SeverityLevel.NORMAL)
     void deveLancarExcecao_quandoConsultarStatusSemTransacao() {
-        when(transacaoPixRepository.findByComanda_Id(1L))
-                .thenReturn(Optional.empty());
+        when(comandaRepository.findById(1L)).thenReturn(Optional.of(comanda));
+        when(transacaoPixRepository.findAllByComanda_Id(1L))
+                .thenReturn(List.of());
 
         assertThrows(EntidadeNaoEncontradaException.class,
-                () -> pixService.consultarStatus(1L));
+                () -> pixService.consultarStatus(1L, usuarioLogado));
     }
 
     @Test
     @Severity(SeverityLevel.CRITICAL)
-    void deveLancarExcecao_quandoAssinaturaInvalida() {
+    void deveRejeitarWebhook_comAssinaturaInvalida() {
         String dataId = "ORD12345TEST";
         String xRequestId = "req-12345";
         String assinatura = "ts=1742505638683,v1=assinatura-invalida";

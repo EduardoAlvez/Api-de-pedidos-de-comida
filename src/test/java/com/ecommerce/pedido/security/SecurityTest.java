@@ -24,7 +24,7 @@ class SecurityTest extends BaseControllerTest {
                 .body("""
                         {
                             "clienteNome": "Security",
-                            "itens": [{"produtoId": 1, "quantidade": 1, "compartilhado": false}]
+                            "itens": [{"produtoId": 1, "quantidade": 1}]
                         }
                         """)
                 .when()
@@ -42,7 +42,7 @@ class SecurityTest extends BaseControllerTest {
                 .body("""
                         {
                             "clienteNome": "Security",
-                            "itens": [{"produtoId": 1, "quantidade": 1, "compartilhado": false}]
+                            "itens": [{"produtoId": 1, "quantidade": 1}]
                         }
                         """)
                 .when()

@@ -40,7 +40,21 @@ public class Usuario implements UserDetails {
     @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private Restaurante restaurante;
 
-    // ... métodos UserDetails (mantenha como estão)
+    @JsonIgnore
+    @ManyToOne
+    @JoinColumn(name = "restaurante_trabalho_id")
+    private Restaurante restauranteTrabalho;
+
+    public Restaurante getRestauranteVinculado() {
+        if (this.tipo == Role.DONO_RESTAURANTE) {
+            return this.restaurante;
+        }
+        if (this.tipo == Role.GARCOM) {
+            return this.restauranteTrabalho;
+        }
+        return null;
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         if (this.tipo == Role.DONO_RESTAURANTE) {

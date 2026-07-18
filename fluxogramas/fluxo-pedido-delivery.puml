@@ -1,0 +1,44 @@
+@startuml
+title Fluxo - Pedido Delivery
+
+|Cliente|
+start
+:Navega no cardápio;\nSeleciona produtos;
+:Adiciona ao carrinho;
+
+if (Usuário logado?) then (sim)
+  :Usa dados do\nperfil;
+else (não)
+  :Informa nome,\ntelefone, email;
+endif
+
+:Informa endereço\nde entrega;
+:Sistema calcula\nsubtotal + frete;
+:Confirma pedido;
+
+|Sistema|
+:POST /API/V1/pedidos;
+:Valida estoque\ne preços;
+:Cria Pedido (PENDENTE);
+:codigoPedido = gerado;
+
+if (Pagamento PIX?) then (sim)
+  :Gera QR Code;\nAguarda pagamento;
+else (não)
+  :Pagamento na entrega;
+endif
+
+:Pedido → CONFIRMADO;
+
+|Restaurante|
+:Prepara pedido;
+:Pedido → EM_PREPARACAO;
+:Pedido → SAIU_PARA_ENTREGA;
+
+|Cliente|
+:Recebe pedido;
+
+|Sistema|
+:Pedido → ENTREGUE;
+stop
+@enduml

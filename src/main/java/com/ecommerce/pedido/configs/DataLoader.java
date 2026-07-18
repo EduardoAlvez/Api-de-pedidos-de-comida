@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -50,6 +51,9 @@ public class DataLoader implements CommandLineRunner {
     @Autowired
     private TransacaoPixRepository transacaoPixRepository;
 
+    @Autowired
+    private ItemCompartilhadoRepository itemCompartilhadoRepository;
+
     @Override
     @Transactional
     public void run(String... args) throws Exception {
@@ -60,6 +64,7 @@ public class DataLoader implements CommandLineRunner {
         Usuario dono1 = criarUsuario("Maria Restaurante", "dono1@email.com", "123456", "11888888888", Role.DONO_RESTAURANTE);
         Usuario dono2 = criarUsuario("Carlos Restaurante", "dono2@email.com", "123456", "11777777777", Role.DONO_RESTAURANTE);
         Usuario garcom1 = criarUsuario("Pedro Garçom", "garcom@email.com", "123456", "11666666666", Role.GARCOM);
+        Usuario garcom2 = criarUsuario("Ana Garçom", "garcom2@email.com", "123456", "11555555555", Role.GARCOM);
 
         // 2. CRIAR RESTAURANTES
         Restaurante restaurante1 = criarRestaurante(
@@ -83,6 +88,11 @@ public class DataLoader implements CommandLineRunner {
                 "https://exemplo.com/restaurante2.jpg",
                 dono2
         );
+
+        // Vincular garcom1 ao restaurante1 (para testes de isolação de dados)
+        garcom1.setRestauranteTrabalho(restaurante1);
+        usuarioRepository.save(garcom1);
+        // Garcom2 permanece SEM vínculo (para testes de garcom não vinculado)
 
         // 3. CRIAR REGIÕES DE ENTREGA
         criarRegiaoEntrega("Centro", new BigDecimal("8.50"), restaurante1);
@@ -157,13 +167,21 @@ public class DataLoader implements CommandLineRunner {
         // 8. CRIAR MESA E COMANDAS DE EXEMPLO
         Mesa mesa1 = criarMesa("João", restaurante1);
         criarComanda("João", mesa1, garcom1, List.of(
-                criarItemComanda(1, feijoada, false),
-                criarItemComanda(2, refrigerante, false)
+                criarItemComanda(1, feijoada),
+                criarItemComanda(2, refrigerante)
         ));
         criarComanda("Maria", mesa1, garcom1, List.of(
-                criarItemComanda(1, feijoada, false),
-                criarItemComanda(1, refrigerante, true)
+                criarItemComanda(1, feijoada)
         ));
+
+        // Adicionar itens compartilhados de exemplo na mesa
+        ItemCompartilhado refriCompartilhado = new ItemCompartilhado();
+        refriCompartilhado.setMesa(mesa1);
+        refriCompartilhado.setProduto(refrigerante);
+        refriCompartilhado.setQuantidade(1);
+        refriCompartilhado.setPrecoUnitario(refrigerante.getPreco());
+        refriCompartilhado.setObservacao("Ratear entre todos");
+        itemCompartilhadoRepository.save(refriCompartilhado);
 
         // 9. CRIAR TRANSAÇÃO PIX DE EXEMPLO (se não existir)
         List<Comanda> comandas = comandaRepository.findAllByMesa_IdOrderByDataAberturaDesc(mesa1.getId());
@@ -273,6 +291,7 @@ public class DataLoader implements CommandLineRunner {
         mesa.setStatus(StatusMesa.LIVRE);
         mesa.setDataAbertura(LocalDateTime.now());
         mesa.setRestaurante(restaurante);
+        mesa.setItensCompartilhados(Collections.emptyList());
         return mesaRepository.save(mesa);
     }
 
@@ -298,12 +317,11 @@ public class DataLoader implements CommandLineRunner {
         comandaRepository.save(comanda);
     }
 
-    private ComandaItem criarItemComanda(Integer quantidade, Produto produto, boolean compartilhado) {
+    private ComandaItem criarItemComanda(Integer quantidade, Produto produto) {
         ComandaItem item = new ComandaItem();
         item.setQuantidade(quantidade);
         item.setPrecoUnitario(produto.getPreco());
         item.setProduto(produto);
-        item.setCompartilhado(compartilhado);
         return item;
     }
 

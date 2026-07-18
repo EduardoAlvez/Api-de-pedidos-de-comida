@@ -1,0 +1,64 @@
+ID;Diagrama;Elemento UML;Artefato no Codigo;Componente UI;Correspondencia
+UC1;Casos de Uso;Abrir Mesa;MainActivity.java -> NewMesaDialog.java;Card "+" na lista, dialog "Nova Mesa";Direta
+UC2;Casos de Uso;Lancar Item na Comanda;ComandaActivity.java -> LaunchForClientDialog.java -> CardapioActivity.java;Botaoo "+", dialog "Lancar para", tela Cardapio;Direta
+UC3;Casos de Uso;Editar Item;ComandaAdapter.java:151 -> EditItemDialog.java;Icone de editar no item, dialog "Editar Item";Direta
+UC4;Casos de Uso;Excluir Item;ComandaAdapter.java:156 -> DeleteItemDialog.java;Icone de lixeira no item, dialog "Excluir Item";Direta
+UC5;Casos de Uso;Fechar Conta;ComandaActivity.java:136 -> FecharContaDialog.java;Botaoo "Fechar Conta", dialog de metodo de pagamento;Direta
+UC6;Casos de Uso;Cancelar Mesa;MesaAdapter.java -> DeleteMesaDialog.java;Icone de lixeira no card da mesa, dialog "Cancelar Comanda";Direta
+UC7;Casos de Uso;Pagar Presencial;FecharContaDialog.java -> PagamentoPresencialDialog.java;Dialog "Pagamento Presencial" com selecao de forma;Direta
+UC8;Casos de Uso;Pagar PIX;FecharContaDialog.java -> PixDialog.java;Dialog "PIX" com QR Code e codigo copia-e-cola;Direta
+UC9;Casos de Uso;Rateio;FecharContaDialog.java -> RateioDialog.java;Dialog "Rateio" com selecao de itens e valores;Direta
+UC10;Casos de Uso;Adicionar Novo Cliente;LaunchForClientDialog.java -> NewClientDialog.java;Opcao "Adicionar Novo Cliente" na lista, dialog "Novo Cliente";Direta
+CL1;Classes;Mesa (id, numero, nomeCliente, status, dataAbertura, totalPedido);model/Mesa.java;Card de mesa na RecyclerView (item_table_occupied.xml);Direta
+CL2;Classes;ItemComanda (type, productName, preco, qtd, isShared, pessoasDividido, valorPago, productNote);model/ItemComanda.java;Itens na RecyclerView da comanda (item_order_product.xml);Direta
+CL3;Classes;Comanda (mesaId, itens, total);controller/ComandaActivity.java (lista "itens" como campo);Tela de comanda completa;Parcial
+CL4;Classes;Produto (id, nome, preco, categoria, imageUrl);model/Produto.java + model/ProdutoResponse.java;Cards de produto no cardapio (item_menu_product.xml);Direta
+CL5;Classes;CartItem (produto, quantidade, observacao);model/CartItem.java;Barra flutuante de pedido (layout_order_float_bar.xml);Direta
+CL6;Classes;ClientOption (id, name, role, type);model/ClientOption.java;Linhas no dialog "Lancar para" (item_client_row.xml);Direta
+CL7;Classes;LoginRequest / LoginResponse;model/LoginRequest.java / model/LoginResponse.java;Tela de login (activity_login.xml);Direta
+CL8;Classes;MesaResponse / RestauranteResponse;model/MesaResponse.java / model/RestauranteResponse.java;(dados da API - sem UI direta);Indireta
+AT1;Atributos;Mesa.numero;Mesa.getNumero();tvTableNumberDecor + chipTableNumber;Direta
+AT2;Atributos;Mesa.nomeCliente;Mesa.getNomeCliente();tvMesaName no header, tvClientName no card;Direta
+AT3;Atributos;Mesa.totalPedido;ItemComanda.getTotalPedido() (armazenado no header);tvTotalAmount no item TYPE_MESA_INFO;Direta
+AT4;Atributos;ItemComanda.productName;ItemComanda.getProductName();tvProductName;Direta
+AT5;Atributos;ItemComanda.preco;ItemComanda.getPreco();tvPrice;Direta
+AT6;Atributos;ItemComanda.preco x qtd;item.getPreco() * item.getQtd();tvPrice (apos correcao);Direta
+AT7;Atributos;ItemComanda.qtd;ItemComanda.getQtd();tvQuantity (QTD: %02d);Direta
+AT8;Atributos;ItemComanda.isShared;ItemComanda.isShared();viewSidebar (vermelho individual, azul compartilhado);Direta
+AT9;Atributos;ItemComanda.productNote;ItemComanda.getProductNote();tvProductNote;Direta
+AT10;Atributos;ItemComanda.pessoasDividido;ItemComanda.getPessoasDividido();tvPriceDetail ("R$ XX/pessoa");Direta
+AT11;Atributos;ItemComanda.dividedChip;ItemComanda.getDividedChip();tvDividedChip ("DIVIDIR EM 4");Direta
+AT12;Atributos;Produto.nome;Produto.getName() / ProdutoResponse.getNome();tvProductName no cardapio;Direta
+AT13;Atributos;Produto.preco;Produto.getPrice() / ProdutoResponse.getPreco();tvPrice no cardapio;Direta
+AT14;Atributos;Produto.categoria;ProdutoResponse.getCategoria();Abas de categoria no CardapioAdapter;Parcial
+AT15;Atributos;CartItem.quantidade;CartItem.getQuantidade();Contador no float bar;Direta
+AT16;Atributos;ClientOption.name;ClientOption.getName();tvClientName no dialog;Direta
+AT17;Atributos;ClientOption.role;ClientOption.getRole();tvClientRole no dialog;Direta
+SQ1;Sequencia;Garcom -> clica "+";MesaAdapter.java -> setOnAddTableListener;Card "+" no final da lista;Direta
+SQ2;Sequencia;MainActivity -> NewMesaDialog;MainActivity.java -> NewMesaDialog.show();Dialog centralizado "Nova Mesa";Direta
+SQ3;Sequencia;NewMesaDialog -> API (criar mesa);NewMesaDialog.java:92 -> btnAbrirMesa;Botaoo "Abrir Mesa", campos numero e nome;Direta
+SQ4;Sequencia;API -> MesaAdapter (notificar);callback.onMesaCriada(mesa) -> adapter.notifyItemInserted();Card da nova mesa na lista;Direta
+SQ5;Sequencia;Garcom -> clica "+" (na comanda);ComandaActivity.java:237 -> btnAddItem;Botaoo "+" na barra inferior;Direta
+SQ6;Sequencia;ComandaActivity -> LaunchForClientDialog;ComandaActivity.java:246 -> dialog.show();Dialog "Lancar para" com lista de clientes;Direta
+SQ7;Sequencia;Garcom -> seleciona cliente;LaunchForClientDialog.java:71 -> adapter;Cliente selecionado na lista;Direta
+SQ8;Sequencia;LaunchForClientDialog -> CardapioActivity;ComandaActivity.java:250 -> startActivityForResult();Tela do cardapio;Direta
+SQ9;Sequencia;CardapioActivity -> ReviewOrderActivity;CardapioActivity.java -> ReviewOrderActivity;Tela de revisao do pedido;Parcial
+SQ10;Sequencia;ReviewOrderActivity -> ComandaActivity (result);ComandaActivity.java:270 -> onActivityResult();Itens inseridos na comanda;Direta
+SQ11;Sequencia;ComandaActivity -> ComandaAdapter (atualizar);adapter.notifyDataSetChanged();RecyclerView atualizada;Direta
+SQ12;Sequencia;Garcom -> clica "Fechar Conta";ComandaActivity.java:136 -> btnFecharConta;Botaoo "Fechar Conta" na barra inferior;Direta
+SQ13;Sequencia;ComandaActivity -> FecharContaDialog;ComandaActivity.java:140 -> dialog.show();Dialog "Metodo de Pagamento";Direta
+SQ14;Sequencia;FecharContaDialog -> PagamentoPresencialDialog;FecharContaDialog.java:141;Dialog "Pagamento Presencial";Direta
+SQ15;Sequencia;FecharContaDialog -> PixDialog;FecharContaDialog.java:162;Dialog "PIX" com QR Code;Direta
+SQ16;Sequencia;FecharContaDialog -> RateioDialog;FecharContaDialog.java:189;Dialog "Rateio";Direta
+SQ17;Sequencia;Confirmado -> ComandaActivity;onPagamentoConfirmado() / onPixConfirmado() / onRateioConfirmado();Toast de confirmacao;Direta
+SQ18;Sequencia;ComandaActivity -> itens (pagar);marcarTodosPagos() / marcarPagosDaPessoa();Itens marcados como PAGO;Direta
+RNF1;Nao Funcional;Plataforma Mobile;build.gradle.kts (minSdk 24, targetSdk 36);Aplicativo Android nativo;Direta
+RNF2;Nao Funcional;Usabilidade (3 toques);ComandaActivity.java -> CardapioActivity.java (2 telas);Fluxo: "+" -> seleciona cliente -> cardapio;Ausente
+RNF3;Nao Funcional;Responsividade;Layouts com LinearLayout, FrameLayout, CardView;Adaptacao a diferentes telas;Parcial
+RNF4;Nao Funcional;Desempenho (busca < 2s);(depende da API backend);Campo de busca no cardapio;Ausente
+RNF5;Nao Funcional;Disponibilidade (99.9%);(infraestrutura do servidor);N/A;Ausente
+RNF6;Nao Funcional;Seguranca (autenticacao JWT);LoginActivity.java + ApiClient.java + ApiService.java;Tela de login, token em SharedPreferences;Direta
+RNF7;Nao Funcional;Integridade (cache local);(nao implementado);N/A;Ausente
+RNF8;Nao Funcional;Concorrencia (multiplos terminais);(nao implementado);N/A;Ausente
+RNF9;Nao Funcional;Manutenibilidade (backend independente);service/ApiClient.java (Retrofit) + service/ApiService.java;Dados fornecidos pela API REST;Direta
+RNF10;Nao Funcional;Interface Visual;Tema vermelho/laranja em colors.xml, styles.xml;Cores, fontes (Work Sans, Inter), estilos Material;Direta

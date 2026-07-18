@@ -1,0 +1,157 @@
+ID;Diagrama;Elemento UML;Artefato no Codigo;Endpoint / Metodo;Correspondencia
+BC1;Classes;Mesa (id, nomeCliente, status, dataAbertura, restaurante, itensCompartilhados);models/Mesa.java;CRUD via MesaService;Direta
+BC2;Classes;Comanda (id, mesa, garcom, clienteNome, status, dataAbertura, dataFechamento, valorTotal, itens, rateios);models/Comanda.java;CRUD via ComandaService;Direta
+BC3;Classes;ComandaItem (id, comanda, produto, quantidade, precoUnitario);models/ComandaItem.java;POST/PUT/DELETE /comandas/{id}/itens;Direta
+BC4;Classes;ComandaRateio (id, comanda, produto, valorPago, dataPagamento);models/ComandaRateio.java;POST /comandas/{id}/rateio;Direta
+BC5;Classes;ItemCompartilhado (id, mesa, produto, quantidade, precoUnitario, observacao);models/ItemCompartilhado.java;POST/GET/PUT/DELETE /mesas/{id}/compartilhados;Direta
+BC6;Classes;Produto (id, nome, descricao, preco, precoMeia, categoria, imageUrl, disponivel, restaurante);models/Produto.java;CRUD via ProdutoController;Direta
+BC7;Classes;Usuario (id, nome, email, telefone, senha, tipo, restaurante, restauranteTrabalho);models/Usuario.java;CRUD via UsuarioController;Direta
+BC8;Classes;Restaurante (id, nome, endereco, telefone, cnpj, tipoCozinha, horarioFuncionamento, imageUrl, produtos, regioes, pedidos, usuario, garcons);models/Restaurante.java;CRUD via RestauranteController;Direta
+BC9;Classes;Pedido (id, codigoPedido, dataDoPedido, status, origem, tipoConsumo, subtotal, taxaEntrega, valorTotal, enderecoDeEntrega, usuario, restaurante, pagamento, itens);models/Pedido.java;CRUD via PedidoController;Direta
+BC10;Classes;ItemPedido (id, quantidade, precoUnitario, tamanho, pedido, produto);models/ItemPedido.java;(criado junto com Pedido);Direta
+BC11;Classes;Pagamento (id, valorTotal, dataDoPagamento, formaDePagamento, status, pedido);models/Pagamento.java;(criado junto com Pedido);Direta
+BC12;Classes;TransacaoPix (id, comanda, valor, qrCodeBase64, payloadCopiaCola, txId, status, dataCriacao, dataConfirmacao);models/TransacaoPix.java;POST/GET /comandas/{id}/pix;Direta
+BC13;Classes;RegiaoEntrega (id, nome, valorFrete, restaurante);models/RegiaoEntrega.java;CRUD via RegiaoEntregaController;Direta
+BD1;DTOs;MesaRequestDTO (restauranteId, nomeCliente);dtos/MesaRequestDTO.java;POST/PUT /API/V1/mesas;Direta
+BD2;DTOs;MesaResponseDTO (id, nomeCliente, status, dataAbertura, restauranteId, restauranteNome, itensCompartilhados);dtos/MesaResponseDTO.java;GET /API/V1/mesas;Direta
+BD3;DTOs;ComandaRequestDTO (clienteNome, itens);dtos/ComandaRequestDTO.java;POST /API/V1/mesas/{mesaId}/comandas;Direta
+BD4;DTOs;ComandaResponseDTO (id, mesaId, garcomId, clienteNome, status, valorTotal, itens, rateios);dtos/ComandaResponseDTO.java;GET /API/V1/comandas;Direta
+BD5;DTOs;ComandaItemRequestDTO (produtoId, quantidade);dtos/ComandaItemRequestDTO.java;POST/PUT /API/V1/comandas/{id}/itens;Direta
+BD6;DTOs;ComandaItemResponseDTO (id, produtoId, nomeProduto, quantidade, precoUnitario, subtotal);dtos/ComandaItemResponseDTO.java;—;Direta
+BD7;DTOs;ItemCompartilhadoRequestDTO (produtoId, quantidade, observacao);dtos/ItemCompartilhadoRequestDTO.java;POST/PUT /API/V1/mesas/{id}/compartilhados;Direta
+BD8;DTOs;ItemCompartilhadoResponseDTO (id, produtoId, nomeProduto, quantidade, precoUnitario, observacao);dtos/ItemCompartilhadoResponseDTO.java;GET /API/V1/mesas/{id}/compartilhados;Direta
+BD9;DTOs;ComandaRateioResponseDTO (id, produtoId, nomeProduto, valorPago, dataPagamento);dtos/ComandaRateioResponseDTO.java;—;Direta
+BD10;DTOs;RateioRequestDTO (produtoId, valorPago);dtos/RateioRequestDTO.java;POST /API/V1/comandas/{id}/rateio;Direta
+BD11;DTOs;LoginRequestDTO (email, senha);dtos/LoginRequestDTO.java;POST /login;Direta
+BD12;DTOs;FecharComandaRequestDTO (formaPagamento);dtos/FecharComandaRequestDTO.java;POST /API/V1/comandas/{id}/fechar;Direta
+BE1;Enums;StatusMesa (LIVRE, OCUPADA);models/enums/StatusMesa.java;—;Direta
+BE2;Enums;StatusComanda (ABERTA, FECHADA, AGUARDANDO_PIX, PAGA);models/enums/StatusComanda.java;—;Direta
+BE3;Enums;Role (CLIENTE, GARCOM, DONO_RESTAURANTE);models/enums/Role.java;—;Direta
+BE4;Enums;StatusPedido (PENDENTE, CONFIRMADO, EM_PREPARACAO, SAIU_PARA_ENTREGA, ENTREGUE, CANCELADO);models/enums/StatusPedido.java;—;Direta
+BE5;Enums;FormaPagamento (PIX, CARTAO_CREDITO, CARTAO_DEBITO, DINHEIRO);models/enums/FormaPagamento.java;—;Direta
+BE6;Enums;StatusPagamento (PENDENTE, APROVADO, RECUSADO, CANCELADO);models/enums/StatusPagamento.java;—;Direta
+BE7;Enums;OrigemPedido (DELIVERY, PRESENCIAL);models/enums/OrigemPedido.java;—;Direta
+BE8;Enums;TipoConsumo (COMER_NO_LOCAL, LEVAR);models/enums/TipoConsumo.java;—;Direta
+BE9;Enums;TamanhoPorcao (INTEIRA, MEIA);models/enums/TamanhoPorcao.java;—;Direta
+BE10;Enums;StatusTransacaoPix (PENDENTE, APROVADO, RECUSADO, EXPIRADO);models/enums/StatusTransacaoPix.java;—;Direta
+C01;Controllers;efetuarLogin();AutenticacaoController.java:33;POST /login;Direta
+C02;Controllers;criarMesa();MesaController.java:40;POST /API/V1/mesas;Direta
+C03;Controllers;listarMesas();MesaController.java:48;GET /API/V1/mesas;Direta
+C04;Controllers;buscarMesaPorId();MesaController.java:55;GET /API/V1/mesas/{id};Direta
+C05;Controllers;atualizarMesa();MesaController.java:62;PUT /API/V1/mesas/{id};Direta
+C06;Controllers;deletarMesa();MesaController.java:71;DELETE /API/V1/mesas/{id};Direta
+C07;Controllers;adicionarItemCompartilhado();MesaController.java:83;POST /API/V1/mesas/{mesaId}/compartilhados;Direta
+C08;Controllers;listarItensCompartilhados();MesaController.java:93;GET /API/V1/mesas/{mesaId}/compartilhados;Direta
+C09;Controllers;atualizarItemCompartilhado();MesaController.java:101;PUT /API/V1/mesas/{mesaId}/compartilhados/{itemId};Direta
+C10;Controllers;removerItemCompartilhado();MesaController.java:111;DELETE /API/V1/mesas/{mesaId}/compartilhados/{itemId};Direta
+C11;Controllers;criarComanda();ComandaController.java:33;POST /API/V1/mesas/{mesaId}/comandas;Direta
+C12;Controllers;listarComandas();ComandaController.java:43;GET /API/V1/comandas?mesaId=;Direta
+C13;Controllers;buscarComanda();ComandaController.java:50;GET /API/V1/comandas/{id};Direta
+C14;Controllers;adicionarItem();ComandaController.java:61;POST /API/V1/comandas/{id}/itens;Direta
+C15;Controllers;atualizarItem();ComandaController.java:71;PUT /API/V1/comandas/{comandaId}/itens/{itemId};Direta
+C16;Controllers;removerItem();ComandaController.java:81;DELETE /API/V1/comandas/{comandaId}/itens/{itemId};Direta
+C17;Controllers;rateio();ComandaController.java:95;POST /API/V1/comandas/{id}/rateio;Direta
+C18;Controllers;fecharComanda();ComandaController.java:104;POST /API/V1/comandas/{id}/fechar;Direta
+C19;Controllers;gerarQrCode();PixController.java:25;POST /API/V1/comandas/{id}/pix;Direta
+C20;Controllers;consultarStatus();PixController.java:31;GET /API/V1/comandas/{id}/pix;Direta
+C21;Controllers;receberWebhook();PixController.java:42;POST /API/V1/pix/webhook;Direta
+C22;Controllers;criarPedido();PedidoController.java:27;POST /API/V1/pedidos;Direta
+C23;Controllers;buscarPedidoPorId();PedidoController.java:33;GET /API/V1/pedidos/{id};Direta
+C24;Controllers;listarPedidosPorUsuario();PedidoController.java:39;GET /API/V1/pedidos/usuario/{usuarioId};Direta
+C25;Controllers;atualizarStatusPedido();PedidoController.java:46;PUT /API/V1/pedidos/{id}/status;Direta
+C26;Controllers;criarProduto();ProdutoController.java:26;POST /API/V1/produtos;Direta
+C27;Controllers;buscarProdutoPorId();ProdutoController.java:32;GET /API/V1/produtos/{id};Direta
+C28;Controllers;atualizarProduto();ProdutoController.java:38;PUT /API/V1/produtos/{id};Direta
+C29;Controllers;deletarProduto();ProdutoController.java:44;DELETE /API/V1/produtos/{id};Direta
+C30;Controllers;listarProdutosPorRestaurante();ProdutoController.java:49;GET /API/V1/produtos/restaurante/{restauranteId};Direta
+C31;Controllers;criarRestaurante();RestauranteController.java:28;POST /API/V1/restaurantes;Direta
+C32;Controllers;listarTodosRestaurantes();RestauranteController.java:39;GET /API/V1/restaurantes;Direta
+C33;Controllers;buscarRestaurantePorId();RestauranteController.java:50;GET /API/V1/restaurantes/{id};Direta
+C34;Controllers;atualizarRestaurante();RestauranteController.java:61;PUT /API/V1/restaurantes/{id};Direta
+C35;Controllers;deletarRestaurante();RestauranteController.java:74;DELETE /API/V1/restaurantes/{id};Direta
+C36;Controllers;criarUsuario();UsuarioController.java:28;POST /API/V1/usuarios;Direta
+C37;Controllers;buscarUsuarioPorId();UsuarioController.java:39;GET /API/V1/usuarios/{id};Direta
+C38;Controllers;listarTodosUsuarios();UsuarioController.java:49;GET /API/V1/usuarios;Direta
+C39;Controllers;atualizarUsuario();UsuarioController.java:59;PUT /API/V1/usuarios/{id};Direta
+C40;Controllers;deletarUsuario();UsuarioController.java:72;DELETE /API/V1/usuarios/{id};Direta
+C41;Controllers;vincularGarcom();GarcomController.java:28;POST /API/V1/restaurantes/{id}/garcons;Direta
+C42;Controllers;desvincularGarcom();GarcomController.java:40;DELETE /API/V1/restaurantes/{id}/garcons/{usuarioId};Direta
+C43;Controllers;listarGarcons();GarcomController.java:52;GET /API/V1/restaurantes/{id}/garcons;Direta
+C44;Controllers;listarRegioes();RegiaoEntregaController.java:26;GET /API/V1/restaurantes/{id}/regioes;Direta
+C45;Controllers;buscarRegiaoPorId();RegiaoEntregaController.java:32;GET /API/V1/restaurantes/{id}/regioes/{id};Direta
+C46;Controllers;criarRegiao();RegiaoEntregaController.java:38;POST /API/V1/restaurantes/{id}/regioes;Direta
+C47;Controllers;atualizarRegiao();RegiaoEntregaController.java:46;PUT /API/V1/restaurantes/{id}/regioes/{id};Direta
+C48;Controllers;deletarRegiao();RegiaoEntregaController.java:54;DELETE /API/V1/restaurantes/{id}/regioes/{id};Direta
+S01;Services;MesaService;services/MesaService.java;criar, listarPorRestaurante, buscarPorId, atualizar, deletar;Direta
+S02;Services;ComandaService;services/ComandaService.java;criar, listarPorMesa, rateio, fechar, adicionarItem, atualizarItem, removerItem;Direta
+S03;Services;ItemCompartilhadoService;services/ItemCompartilhadoService.java;adicionar, listar, atualizar, remover;Direta
+S04;Services;PedidoService;services/PedidoService.java;criar, buscarPorId, listarPorUsuario, atualizarStatus;Direta
+S05;Services;PixService;services/PixService.java;gerarQrCode, consultarStatus, processarWebhook;Direta
+S06;Services;MercadoPagoPixClient;services/MercadoPagoPixClient.java;criarCobranca (chama API /v1/orders do MP);Direta
+S07;Services;PixClient (interface);services/PixClient.java;interface criarCobranca;Direta
+S08;Services;ProdutoService;services/ProdutoService.java;criar, buscarPorId, atualizar, deletar, listarPorRestaurante;Direta
+S09;Services;RestauranteService;services/RestauranteService.java;criar, listarTodos, buscarPorId, atualizar, deletar;Direta
+S10;Services;UsuarioService;services/UsuarioService.java;criar, buscarPorId, listarTodos, atualizar, deletar;Direta
+S11;Services;VinculoGarcomService;services/VinculoGarcomService.java;vincular, desvincular, listarGarcons;Direta
+S12;Services;RegiaoEntregaService;services/RegiaoEntregaService.java;criar, listar, buscarPorId, atualizar, deletar;Direta
+S13;Services;TokenService;services/token/TokenService.java;gerarToken, validarToken;Direta
+S14;Services;UserDetailsServiceImpl;services/impl/UserDetailsServiceImpl.java;loadUserByUsername;Direta
+R01;Repositories;MesaRepository;repositories/MesaRepository.java;findAllByRestaurante_Id;Direta
+R02;Repositories;ComandaRepository;repositories/ComandaRepository.java;findByMesaId, findByMesaIdOrderByDataAberturaDesc;Direta
+R03;Repositories;ComandaItemRepository;repositories/ComandaItemRepository.java;save, findById, delete;Direta
+R04;Repositories;ComandaRateioRepository;repositories/ComandaRateioRepository.java;findByComandaId, findByProdutoIdAndComandaMesa;Direta
+R05;Repositories;ItemCompartilhadoRepository;repositories/ItemCompartilhadoRepository.java;findByMesaId, save, delete;Direta
+R06;Repositories;ProdutoRepository;repositories/ProdutoRepository.java;findByRestauranteId;Direta
+R07;Repositories;PedidoRepository;repositories/PedidoRepository.java;findByUsuarioId, findByRestauranteId;Direta
+R08;Repositories;PagamentoRepository;repositories/PagamentoRepository.java;—;Direta
+R09;Repositories;ItemPedidoRepository;repositories/ItemPedidoRepository.java;—;Direta
+R10;Repositories;UsuarioRepository;repositories/UsuarioRepository.java;findByEmail;Direta
+R11;Repositories;RestauranteRepository;repositories/RestauranteRepository.java;findByUsuarioId, findByCnpj;Direta
+R12;Repositories;TransacaoPixRepository;repositories/TransacaoPixRepository.java;findByTxId, findByComandaId;Direta
+R13;Repositories;RegiaoEntregaRepository;repositories/RegiaoEntregaRepository.java;findByRestauranteId;Direta
+SQ01;Sequencia;Garcom -> POST /API/V1/mesas;MesaController.java:40;criarMesa();Direta
+SQ02;Sequencia;Controller -> MesaService.criar();MesaService.java:37-53;criar(requestDTO, usuarioLogado);Direta
+SQ03;Sequencia;Service -> valida restaurante do usuario;MesaService.java:38-43;getRestauranteVinculado() + valida;Direta
+SQ04;Sequencia;Service -> MesaRepository.save();MesaService.java:53;mesaRepository.save(mesa);Direta
+SQ05;Sequencia;Service retorna MesaResponseDTO;MesaService.java:103-130;toResponseDTO(mesa);Direta
+SQ06;Sequencia;Garcom -> POST /mesas/{id}/comandas;ComandaController.java:33;criarComanda();Direta
+SQ07;Sequencia;Controller -> ComandaService.criar();ComandaService.java:53-70;criar();Direta
+SQ08;Sequencia;Service -> valida mesa + busca restaurante;ComandaService.java:55-60;validarMesaRestaurante();Direta
+SQ09;Sequencia;Para cada item -> ProdutoRepository;ComandaService.java:76-89;produtoRepository.findById();Direta
+SQ10;Sequencia;Service -> cria ComandaItem + calcula total;ComandaService.java:90-96;new ComandaItem + calculo;Direta
+SQ11;Sequencia;Service -> ComandaRepository.save();ComandaService.java:97;comandaRepository.save(comanda);Direta
+SQ12;Sequencia;Service retorna ComandaResponseDTO;ComandaService.java:290-315;toResponseDTO(comanda);Direta
+SQ13;Sequencia;Garcom -> POST /mesas/{id}/compartilhados;MesaController.java:83;adicionarItemCompartilhado();Direta
+SQ14;Sequencia;Controller -> ItemCompartilhadoService;ItemCompartilhadoService.java:28-52;adicionar();Direta
+SQ15;Sequencia;Service -> valida mesa + busca produto;ItemCompartilhadoService.java:31-42;validaMesa + produtoRepository;Direta
+SQ16;Sequencia;Service -> ItemCompartilhadoRepository.save();ItemCompartilhadoService.java:49;save(item);Direta
+SQ17;Sequencia;Garcom -> POST /comandas/{id}/rateio;ComandaController.java:95;rateio();Direta
+SQ18;Sequencia;Service -> valida comanda + busca mesa;ComandaService.java:206-215;rateio() + validacoes;Direta
+SQ19;Sequencia;Service -> consulta mesa.itensCompartilhados;ComandaService.java:218-224;busca item no pool da mesa;Direta
+SQ20;Sequencia;Service -> calcula saldo restante;ComandaService.java:228-235;sumRateios + valida saldo;Direta
+SQ21;Sequencia;Service -> cria ComandaRateio + save;ComandaService.java:237-243;save(comanda);Direta
+SQ22;Sequencia;Garcom -> POST /comandas/{id}/fechar;ComandaController.java:104;fecharComanda();Direta
+SQ23;Sequencia;Service -> valida formaPagamento;ComandaService.java:258-265;fechar() + valida forma;Direta
+SQ24;Sequencia;Service -> status = PAGA + dataFechamento;ComandaService.java:267-275;setStatus + setDataFechamento;Direta
+SQ25;Sequencia;Service -> verifica se libera mesa;ComandaService.java:277-280;verificaUltimaComandaMesa();Direta
+SQ26;Sequencia;Garcom -> POST /comandas/{id}/pix;PixController.java:25;gerarQrCode();Direta
+SQ27;Sequencia;Controller -> PixService;PixService.java:65-105;gerarQrCode();Direta
+SQ28;Sequencia;Service -> resolve token do restaurante;PixService.java:75-90;resolveAccessToken();Direta
+SQ29;Sequencia;Service -> MercadoPagoPixClient;MercadoPagoPixClient.java:40-80;criarCobranca();Direta
+SQ30;Sequencia;Client -> POST /v1/orders (MP API);MercadoPagoPixClient.java:60-75;chamada HTTP ao MP;Direta
+SQ31;Sequencia;Service -> salva TransacaoPix;PixService.java:95-102;transacaoPixRepository.save();Direta
+SQ32;Sequencia;Service -> retorna PixResponseDTO;PixService.java:103;toPixResponseDTO();Direta
+SQ33;Sequencia;MP -> POST /pix/webhook;PixController.java:42;receberWebhook();Direta
+SQ34;Sequencia;Service -> valida assinatura x-signature;PixService.java:120-125;validaAssinatura();Direta
+SQ35;Sequencia;Service -> localiza TransacaoPix;PixService.java:128-132;findByTxId();Direta
+SQ36;Sequencia;Service -> atualiza status PAGA;PixService.java:135-145;processarWebhook();Direta
+EST01;Estados;Comanda ABERTA -> PAGA;ComandaService.java:267-275;fechar();Direta
+EST02;Estados;Comanda ABERTA -> AGUARDANDO_PIX;PixService.java:95-100;gerarQrCode();Direta
+EST03;Estados;Comanda AGUARDANDO_PIX -> PAGA;PixService.java:135-145;processarWebhook();Direta
+EST04;Estados;Mesa LIVRE -> OCUPADA;ComandaService.java:65-70;criar();Direta
+EST05;Estados;Mesa OCUPADA -> LIVRE;ComandaService.java:277-280;fechar() (verifica ultima comanda);Direta
+CF1;Configuracao;SecurityConfig;configs/SecurityConfig.java;Configura rotas publicas, SecurityFilterChain, BCrypt, CORS;Direta
+CF2;Configuracao;SecurityFilter;configs/SecurityFilter.java;Filtro OncePerRequest: extrai JWT, valida, popula SecurityContext;Direta
+CF3;Configuracao;SecurityUtils;configs/SecurityUtils.java;Utilitario getUsuarioLogado() do SecurityContextHolder;Direta
+CF4;Configuracao;DataLoader;configs/DataLoader.java;Seeds banco H2: usuarios, restaurante, produtos, mesas, comandas, itens;Direta
+CF5;Configuracao;MercadoPagoConfigSetup;configs/MercadoPagoConfigSetup.java;Carrega accessToken + webhookSecret;Direta

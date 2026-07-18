@@ -46,6 +46,36 @@ public abstract class BaseControllerTest {
         return tokenService.gerarToken(cliente);
     }
 
+    // Token do dono do restaurante1 (Sabor Brasileiro)
+    protected String tokenDono1() {
+        Usuario dono = new Usuario();
+        dono.setId(2L);
+        dono.setEmail("dono1@email.com");
+        dono.setNome("Maria Restaurante");
+        dono.setTipo(Role.DONO_RESTAURANTE);
+        return tokenService.gerarToken(dono);
+    }
+
+    // Token do dono do restaurante2 (Pizza Italiana) — usado em testes de isolação
+    protected String tokenDono2() {
+        Usuario dono = new Usuario();
+        dono.setId(3L);
+        dono.setEmail("dono2@email.com");
+        dono.setNome("Carlos Restaurante");
+        dono.setTipo(Role.DONO_RESTAURANTE);
+        return tokenService.gerarToken(dono);
+    }
+
+    // Token de um GARCOM sem restaurante vinculado — usado em testes negativos
+    protected String tokenGarcomSemVinculo() {
+        Usuario garcom = new Usuario();
+        garcom.setId(5L);
+        garcom.setEmail("garcom2@email.com");
+        garcom.setNome("Ana Garçom");
+        garcom.setTipo(Role.GARCOM);
+        return tokenService.gerarToken(garcom);
+    }
+
     protected String headerAuth(String token) {
         return "Bearer " + token;
     }

@@ -1,0 +1,23 @@
+@startuml
+actor Garcom as G
+participant ComandaActivity as CA
+participant LaunchForClientDialog as LFCD
+participant CardapioActivity as CARD
+participant ReviewOrderActivity as REV
+participant ComandaAdapter as ADPT
+
+G -> CA: clica "+"
+CA -> LFCD: show()
+LFCD -> G: lista de clientes
+G -> LFCD: seleciona cliente
+LFCD -> CA: onClientSelected()
+CA -> CARD: startActivityForResult()
+CARD -> CARD: monta carrinho
+G -> CARD: clica "Revisar Pedido"
+CARD -> REV: startActivity()
+REV -> REV: confirma pedido
+REV -> CA: onActivityResult(RESULT_OK)
+CA -> CA: insere itens na lista
+CA -> ADPT: notifyDataSetChanged()
+ADPT --> G: comanda atualizada
+@enduml

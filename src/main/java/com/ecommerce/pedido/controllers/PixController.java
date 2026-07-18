@@ -1,7 +1,9 @@
 package com.ecommerce.pedido.controllers;
 
+import com.ecommerce.pedido.configs.SecurityUtils;
 import com.ecommerce.pedido.dtos.PixResponseDTO;
 import com.ecommerce.pedido.dtos.WebhookMercadoPagoDTO;
+import com.ecommerce.pedido.models.Usuario;
 import com.ecommerce.pedido.services.PixService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,12 +23,14 @@ public class PixController {
 
     @PostMapping("/comandas/{id}/pix")
     public ResponseEntity<PixResponseDTO> gerarQrCode(@PathVariable Long id) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(pixService.gerarQrCode(id));
+        Usuario usuarioLogado = SecurityUtils.getUsuarioLogado();
+        return ResponseEntity.status(HttpStatus.CREATED).body(pixService.gerarQrCode(id, usuarioLogado));
     }
 
     @GetMapping("/comandas/{id}/pix")
     public ResponseEntity<PixResponseDTO> consultarStatus(@PathVariable Long id) {
-        return ResponseEntity.ok(pixService.consultarStatus(id));
+        Usuario usuarioLogado = SecurityUtils.getUsuarioLogado();
+        return ResponseEntity.ok(pixService.consultarStatus(id, usuarioLogado));
     }
 
     @GetMapping("/pix/webhook")

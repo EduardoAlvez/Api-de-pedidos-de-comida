@@ -1,0 +1,61 @@
+@startuml
+title Fluxo - Geração de PIX e Webhook
+
+|Sistema|
+start
+:POST /API/V1/comandas/{id}/pix;
+:Busca comanda e restaurante;
+:Resolve token:\nConexão MP do restaurante?\ntoken global?;
+
+if (Token expirado?) then (sim)
+  :Faz refresh com\nrefresh_token;
+  :Salva novo token;
+else (não)
+endif
+
+:Monta payload da cobrança;
+:Envia POST /v1/orders\npara Mercado Pago API;
+
+if (Resposta 201?) then (sim)
+  :Extrai qr_code_base64\nid, txId;
+  :Salva TransacaoPix\n(status = PENDENTE);
+  :Comanda → AGUARDANDO_PIX;
+  :Retorna QR Code\npara o frontend;
+else (não)
+  :Log erro;
+  :500 Internal Server Error;
+endif
+
+|Mercado Pago|
+:Cliente paga no app do banco;
+:MP envia notificação;
+
+|Sistema|
+:POST /webhook/mercadopago;
+:Valida assinatura x-signature;
+
+if (Assinatura inválida?) then (sim)
+  :401 Unauthorized;
+  stop
+else (não)
+endif
+
+:Localiza TransacaoPix por txId;
+
+if (txId não encontrado?) then (sim)
+  :404 Not Found;
+  stop
+else (não)
+endif
+
+if (Status = "approved"?) then (sim)
+  :TransacaoPix → APROVADO;
+  :Comanda → PAGA;
+  :Registra dataConfirmação;
+else (não)
+  :Atualiza status\nconforme MP;
+endif
+
+:200 OK;
+stop
+@enduml

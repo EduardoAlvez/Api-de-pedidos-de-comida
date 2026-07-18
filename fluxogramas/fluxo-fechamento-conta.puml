@@ -1,0 +1,51 @@
+@startuml
+title Fluxo - Fechamento de Conta
+
+start
+:Garçom seleciona comanda;
+:Comanda deve estar ABERTA;
+
+repeat
+  :Escolhe ação;
+
+  fork
+    :Rateio de Item Compartilhado;
+    :POST /API/V1/comandas/{id}/rateio\n{ produtoId, valorPago };
+    if (Valor excede saldo\nrestante do item?) then (sim)
+      :400 Bad Request\n"Saldo insuficiente";
+    else (não)
+      :Rateio registrado\nvalorTotal da comanda\nnão se altera;
+    endif
+  fork again
+    :Fechar Conta Presencial;
+    :POST /API/V1/comandas/{id}/fechar\n{ formaPagamento };
+    if (Forma = PIX?) then (sim)
+      :400 Bad Request\n"Use /pix";
+    else (não)
+      :Status → PAGA\nDataFechamento registrada;
+    endif
+  fork again
+    :Gerar QR Code PIX;
+    :POST /API/V1/comandas/{id}/pix;
+    :Chama Mercado Pago API\ncom token do restaurante;
+    :Retorna QR Code Base64\n+ payload Copia e Cola;
+    :Comanda → AGUARDANDO_PIX;
+
+    note right
+      Webhook confirma depois:
+      POST /webhook/mercadopago
+      → TransacaoPix APROVADO
+      → Comanda PAGA
+    end note
+  end fork
+
+repeat while (Ainda há ações\nnesta comanda?)
+
+if (Todas as comandas\nda mesa estão PAGA?) then (sim)
+  :Mesa → LIVRE;
+else (não)
+  :Mesa continua OCUPADA;
+endif
+
+stop
+@enduml

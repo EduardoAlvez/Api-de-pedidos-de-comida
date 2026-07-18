@@ -1,7 +1,9 @@
 package com.ecommerce.pedido.controllers;
 
+import com.ecommerce.pedido.configs.SecurityUtils;
 import com.ecommerce.pedido.dtos.RegiaoEntregaRequestDTO;
 import com.ecommerce.pedido.dtos.RegiaoEntregaResponseDTO;
+import com.ecommerce.pedido.models.Usuario;
 import com.ecommerce.pedido.services.RegiaoEntregaService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -21,20 +23,22 @@ public class RegiaoEntregaController {
     }
 
     @GetMapping
-    public ResponseEntity<List<RegiaoEntregaResponseDTO>> listarRegioes(@PathVariable Long restauranteId) {
-        return ResponseEntity.ok(regiaoEntregaService.listar(restauranteId));
+    public ResponseEntity<List<RegiaoEntregaResponseDTO>> listarRegioes() {
+        Usuario usuarioLogado = SecurityUtils.getUsuarioLogado();
+        return ResponseEntity.ok(regiaoEntregaService.listar(usuarioLogado));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<RegiaoEntregaResponseDTO> buscarRegiaoPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(regiaoEntregaService.buscarPorId(id));
+        Usuario usuarioLogado = SecurityUtils.getUsuarioLogado();
+        return ResponseEntity.ok(regiaoEntregaService.buscarPorId(id, usuarioLogado));
     }
 
     @PostMapping
     public ResponseEntity<RegiaoEntregaResponseDTO> criarRegiao(
-            @PathVariable Long restauranteId,
             @Valid @RequestBody RegiaoEntregaRequestDTO requestDTO) {
-        RegiaoEntregaResponseDTO response = regiaoEntregaService.criar(restauranteId, requestDTO);
+        Usuario usuarioLogado = SecurityUtils.getUsuarioLogado();
+        RegiaoEntregaResponseDTO response = regiaoEntregaService.criar(requestDTO, usuarioLogado);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -42,12 +46,14 @@ public class RegiaoEntregaController {
     public ResponseEntity<RegiaoEntregaResponseDTO> atualizarRegiao(
             @PathVariable Long id,
             @Valid @RequestBody RegiaoEntregaRequestDTO requestDTO) {
-        return ResponseEntity.ok(regiaoEntregaService.atualizar(id, requestDTO));
+        Usuario usuarioLogado = SecurityUtils.getUsuarioLogado();
+        return ResponseEntity.ok(regiaoEntregaService.atualizar(id, requestDTO, usuarioLogado));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deletarRegiao(@PathVariable Long id) {
-        regiaoEntregaService.deletar(id);
+        Usuario usuarioLogado = SecurityUtils.getUsuarioLogado();
+        regiaoEntregaService.deletar(id, usuarioLogado);
         return ResponseEntity.noContent().build();
     }
 }

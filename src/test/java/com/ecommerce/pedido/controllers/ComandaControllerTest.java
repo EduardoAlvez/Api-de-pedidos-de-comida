@@ -21,7 +21,7 @@ class ComandaControllerTest extends BaseControllerTest {
                         {
                             "clienteNome": "Joao",
                             "itens": [
-                                {"produtoId": 1, "quantidade": 1, "compartilhado": false}
+                                {"produtoId": 1, "quantidade": 1}
                             ]
                         }
                         """)
@@ -44,7 +44,7 @@ class ComandaControllerTest extends BaseControllerTest {
                         {
                             "clienteNome": "Joao",
                             "itens": [
-                                {"produtoId": 999, "quantidade": 1, "compartilhado": false}
+                                {"produtoId": 999, "quantidade": 1}
                             ]
                         }
                         """)
@@ -70,7 +70,7 @@ class ComandaControllerTest extends BaseControllerTest {
     @Test
     @Severity(SeverityLevel.CRITICAL)
     @Story("Fluxo completo")
-    @Description("Cria comanda com item compartilhado, faz rateio parcial e fecha a comanda")
+    @Description("Cria comanda, faz rateio de item compartilhado da mesa e fecha a comanda")
     void deveCriarComanda_eFazerRateio_eFechar() {
         Integer comandaId = Allure.step("Criar comanda", () ->
             given()
@@ -80,8 +80,7 @@ class ComandaControllerTest extends BaseControllerTest {
                         {
                             "clienteNome": "Maria",
                             "itens": [
-                                {"produtoId": 1, "quantidade": 1, "compartilhado": false},
-                                {"produtoId": 3, "quantidade": 1, "compartilhado": true}
+                                {"produtoId": 1, "quantidade": 1}
                             ]
                         }
                         """)
@@ -92,7 +91,7 @@ class ComandaControllerTest extends BaseControllerTest {
                 .extract().path("id")
         );
 
-        Allure.step("Fazer rateio do item compartilhado", () -> {
+        Allure.step("Fazer rateio do item compartilhado (produtoId 3 = refrigerante)", () -> {
             given()
                     .header("Authorization", "Bearer " + tokenGarcom())
                     .contentType(ContentType.JSON)
@@ -125,7 +124,7 @@ class ComandaControllerTest extends BaseControllerTest {
     @Severity(SeverityLevel.MINOR)
     @Story("Rateio")
     void deveRejeitarRateioComValorExcessivo() {
-        Integer comandaId = Allure.step("Criar comanda com item compartilhado", () ->
+        Integer comandaId = Allure.step("Criar comanda", () ->
             given()
                 .header("Authorization", "Bearer " + tokenGarcom())
                 .contentType(ContentType.JSON)
@@ -133,7 +132,7 @@ class ComandaControllerTest extends BaseControllerTest {
                         {
                             "clienteNome": "Pedro",
                             "itens": [
-                                {"produtoId": 3, "quantidade": 1, "compartilhado": true}
+                                {"produtoId": 1, "quantidade": 1}
                             ]
                         }
                         """)
@@ -144,7 +143,7 @@ class ComandaControllerTest extends BaseControllerTest {
                 .extract().path("id")
         );
 
-        Allure.step("Tentar rateio com valor maior que o saldo", () -> {
+        Allure.step("Tentar rateio com valor maior que o saldo do item compartilhado", () -> {
             given()
                     .header("Authorization", "Bearer " + tokenGarcom())
                     .contentType(ContentType.JSON)

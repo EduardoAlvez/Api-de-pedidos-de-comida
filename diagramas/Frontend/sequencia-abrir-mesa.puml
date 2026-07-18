@@ -1,0 +1,17 @@
+@startuml
+actor Garcom as G
+participant MainActivity as MA
+participant NewMesaDialog as NMD
+participant MesaAdapter as ADPT
+database "API REST" as API
+
+G -> MA: clica card "+"
+MA -> NMD: show()
+NMD -> G: exibe formulário
+G -> NMD: preenche número e nome
+NMD -> NMD: valida duplicidade
+NMD -> API: POST /API/V1/mesas
+API --> NMD: 201 Created
+NMD -> ADPT: notifyItemInserted()
+ADPT --> G: mesa adicionada na lista
+@enduml

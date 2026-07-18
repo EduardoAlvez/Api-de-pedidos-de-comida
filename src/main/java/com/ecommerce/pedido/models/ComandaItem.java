@@ -30,5 +30,4 @@ public class ComandaItem {
 
     private Integer quantidade;
     private BigDecimal precoUnitario;
-    private boolean compartilhado;
 }

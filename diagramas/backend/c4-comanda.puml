@@ -1,0 +1,188 @@
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam class {
+  BorderColor #2C3E50
+  FontColor #2C3E50
+}
+skinparam arrow {
+  Color #7F8C8D
+  FontColor #34495E
+  FontSize 10
+}
+
+skinparam packageStyle rectangle
+
+title C4 — Comanda Digital: Fluxo de Comanda Presencial\nZoom progressivo da visao geral ao codigo
+
+
+' ═══════════════════════════════════════════════════════════════
+' NÍVEL 1 — CONTEXTO
+' ═══════════════════════════════════════════════════════════════
+
+package "Nivel 1 — Contexto" as L1 #F2F4F4 {
+
+  class "Ator: Garcom\n(usuario do sistema)" as Garcom <<R>> #3498DB {
+  }
+
+  class "Comanda Digital\nSistema de Gestao\nde Restaurante" as Sis <<S>> #2ECC71 {
+  }
+
+  class "Mercado Pago\nGateway de Pagamento\n(PIX)" as MP <<E>> #E74C3C {
+  }
+
+  Garcom --> Sis : "abre mesa, lanca itens,\nfecha conta"
+  Sis --> MP : "cobra via PIX"
+}
+
+
+' ═══════════════════════════════════════════════════════════════
+' NÍVEL 2 — CONTÊINERES
+' ═══════════════════════════════════════════════════════════════
+
+package "Nivel 2 — Conteineres" as L2 #F2F4F4 {
+
+  class "Android App\n(Java + Retrofit)" as Android <<C>> #9B59B6 {
+  }
+
+  class "API Spring Boot 3\n(Java 21 / JPA / JWT)" as API <<C>> #2980B9 {
+  }
+
+  class "Banco de Dados\nH2 / MySQL / PG" as DB <<C>> #95A5A6 {
+  }
+
+  Android --> API : "HTTP REST (JSON)\n/API/V1/"
+  API --> DB : "JDBC / JPA"
+  API --> MP : "HTTP (cobranca PIX)"
+}
+
+
+' ═══════════════════════════════════════════════════════════════
+' NÍVEL 3 — COMPONENTES
+' ═══════════════════════════════════════════════════════════════
+
+package "Nivel 3 — Componentes da API" as L3 #F2F4F4 {
+
+  package "Infraestrutura" as InfraPkg #D5D8DC {
+    class "JwtAuthFilter\n(JWT stateless)" as InfraAuth <<I>> #BDC3C7 {
+    }
+    class "Swagger\n(springdoc 2.3)" as InfraSwag <<I>> #BDC3C7 {
+    }
+    class "ExceptionHandler\n(@ControllerAdvice)" as InfraEx <<I>> #BDC3C7 {
+    }
+  }
+
+  package "Fluxo: Mesa" as FMPkg #D5F5E3 {
+    class "MesaController\n/API/V1/mesas" as MesaCtrl <<R>> #27AE60 {
+    }
+    class "MesaService\nvalidarAcesso()" as MesaSvc <<S>> #2ECC71 {
+    }
+    class "MesaRepository\n(JPA Repository)" as MesaRepo <<R>> #58D68D {
+    }
+    MesaCtrl --> MesaSvc
+    MesaSvc --> MesaRepo
+  }
+
+  package "Fluxo: Comanda + Itens" as FCPkg #D6EAF8 {
+    class "ComandaController\n/API/V1/comandas" as ComandaCtrl <<R>> #2980B9 {
+    }
+    class "ComandaService\nrateio()" as ComandaSvc <<S>> #3498DB {
+    }
+    class "ItemCompartilhado\nService" as ItemSvc <<S>> #5DADE2 {
+    }
+    class "ComandaRepository\n(JPA Repository)" as ComandaRepo <<R>> #85C1E9 {
+    }
+    class "ItemCompartilhado\nRepository" as ItemRepo <<R>> #AED6F1 {
+    }
+    ComandaCtrl --> ComandaSvc
+    ComandaSvc --> ComandaRepo
+    ComandaSvc --> ItemSvc
+    MesaSvc -right-> ComandaSvc : "consulta comandas"
+  }
+
+  package "Fluxo: Pagamento" as FPPkg #FADBD8 {
+    class "PixController\n/API/V1/pagamentos" as PixCtrl <<R>> #E74C3C {
+    }
+    class "MercadoPago\nService" as PixSvc <<S>> #EC7063 {
+    }
+    class "MercadoPago\nClient (ngrok)" as MPClient <<C>> #F1948A {
+    }
+    PixCtrl --> PixSvc
+    PixSvc --> MPClient
+  }
+}
+
+
+' ═══════════════════════════════════════════════════════════════
+' NÍVEL 4 — CÓDIGO (entidades JPA do fluxo comanda)
+' ═══════════════════════════════════════════════════════════════
+
+package "Nivel 4 — Codigo (Entidades JPA)" as L4 #F2F4F4 {
+
+  class "Mesa" as E_Mesa {
+    Long id
+    String nomeCliente
+    StatusMesa status
+    LocalDateTime dataAbertura
+  }
+
+  class "Comanda" as E_Comanda {
+    Long id
+    String clienteNome
+    StatusComanda status
+    LocalDateTime dataAbertura
+    BigDecimal valorTotal
+  }
+
+  class "ComandaItem" as E_Item {
+    Long id
+    Integer quantidade
+    BigDecimal precoUnitario
+  }
+
+  class "ItemCompartilhado" as E_Comp {
+    Long id
+    Integer quantidade
+    BigDecimal precoUnitario
+    String observacao
+  }
+
+  class "ComandaRateio" as E_Rateio {
+    Long id
+    BigDecimal valorPago
+    LocalDateTime dataPagamento
+  }
+
+  class "Produto" as E_Prod {
+    Long id
+    String nome
+    BigDecimal preco
+    String categoria
+  }
+
+  class "TransacaoPix" as E_Pix {
+    Long id
+    BigDecimal valor
+    String qrCodeBase64
+    String txId
+    StatusTransacaoPix status
+  }
+
+  E_Mesa "1" -- "*" E_Comanda : possui
+  E_Mesa "1" -- "*" E_Comp : agrega
+  E_Comanda "1" -- "*" E_Item : contem
+  E_Comanda "1" -- "*" E_Rateio : registra
+  E_Comanda "1" -- "*" E_Pix : gera
+  E_Prod "1" -- "*" E_Item
+  E_Prod "1" -- "*" E_Comp
+  E_Prod "1" -- "*" E_Rateio
+}
+
+note bottom of L4
+  Fluxo: Garcom abre Mesa -> adiciona itens
+  (individuais na Comanda / compartilhados na Mesa)
+  -> fecha conta -> rateio ou PIX
+end note
+
+@enduml

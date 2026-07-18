@@ -15,5 +15,4 @@ public class ComandaItemResponseDTO {
     private Integer quantidade;
     private BigDecimal precoUnitario;
     private BigDecimal subtotal;
-    private boolean compartilhado;
 }

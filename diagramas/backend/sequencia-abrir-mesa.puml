@@ -1,0 +1,33 @@
+@startuml
+actor Garcom as G
+participant MesaController as CTRL
+participant MesaService as SVC
+participant MesaRepository as REPO
+database "H2 Database" as DB
+
+G -> CTRL: POST /API/V1/mesas\n{\n  "restauranteId": 1,\n  "nomeCliente": "João"\n}
+activate CTRL
+
+CTRL -> SVC: criar(requestDTO, usuarioLogado)
+activate SVC
+
+SVC -> SVC: validarRestaurante(restauranteId, usuarioLogado)
+SVC -> SVC: validarRoleGarcomOuDono()
+
+SVC -> Mesa: new Mesa(nomeCliente, status=LIVRE,\n                    itensCompartilhados=[])
+activate Mesa
+
+SVC -> REPO: save(mesa)
+activate REPO
+REPO -> DB: INSERT INTO mesas (...)
+DB --> REPO: id gerado
+REPO --> SVC: mesa salva
+deactivate REPO
+
+SVC --> CTRL: MesaResponseDTO
+deactivate SVC
+
+CTRL --> G: 201 Created\n{ "id": 1, "status": "LIVRE",\n  "nomeCliente": "João", ... }
+deactivate CTRL
+
+@enduml

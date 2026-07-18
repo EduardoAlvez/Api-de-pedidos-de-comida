@@ -1,0 +1,53 @@
+@startuml
+title Fluxo - Autenticação e Autorização
+
+|Cliente|
+start
+:Envia POST /login\n{ email, senha };
+
+|Sistema|
+:Busca usuário por email\nno UserDetailsServiceImpl;
+
+if (Usuário encontrado\ne senha válida?) then (sim)
+  :Gera token JWT\n(7 dias, assinado HMAC);
+  :Retorna 200 OK\n{ token, type: "Bearer" };
+else (não)
+  :401 Unauthorized;
+  stop
+endif
+
+|Cliente|
+:Armazena token;
+:Envia nas requisições:\nAuthorization: Bearer <token>;
+
+|Sistema (SecurityFilter)|
+:Extrai token do header;
+if (Token ausente?) then (sim)
+  if (Rota pública?\n/login, /webhook,\n/produtos, /h2-console) then (sim)
+    :Permite acesso\n(segue fluxo normal);
+  else (não)
+    :401 Unauthorized;
+    stop
+  endif
+else (não)
+  :Valida assinatura\ne expiração;
+  if (Token inválido\nou expirado?) then (sim)
+    :401 Unauthorized;
+    stop
+  else (não)
+    :Popula SecurityContext\ncom roles do usuário;
+  endif
+endif
+
+|Controller|
+:Verifica @PreAuthorize\nou lógica de role;
+
+if (Role tem permissão\npara o endpoint?) then (sim)
+  :Executa operação;
+  :Retorna resposta;
+else (não)
+  :403 Forbidden;
+endif
+
+stop
+@enduml

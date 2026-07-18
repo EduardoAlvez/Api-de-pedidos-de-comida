@@ -15,6 +15,4 @@ public class ComandaItemRequestDTO {
     @NotNull(message = "A quantidade é obrigatória.")
     @Positive(message = "A quantidade deve ser positiva.")
     private Integer quantidade;
-
-    private boolean compartilhado;
 }
