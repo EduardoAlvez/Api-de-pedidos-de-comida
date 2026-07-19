@@ -1,0 +1,17 @@
+target/
+.git/
+.mvn/
+.m2/
+.dockerignore
+*.md
+.gitignore
+Dockerfile
+docker-compose.yml
+docs/
+diagramas/
+fluxogramas/
+matriz/
+requesitos/
+artefatos/
+.allure/
+allure-results/
