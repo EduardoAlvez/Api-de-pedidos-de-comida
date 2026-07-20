@@ -45,6 +45,7 @@ public class SecurityConfig {
                     req.requestMatchers("/swagger-ui/**").permitAll();
                     req.requestMatchers("/v3/api-docs/**").permitAll();
                     req.requestMatchers("/API/V1/pix/webhook").permitAll();
+                    req.requestMatchers("/uploads/**").permitAll();
                     req.anyRequest().authenticated();
                 })
                 .headers(headers -> headers
