@@ -14,6 +14,7 @@ public class RestauranteResponseDTO {
     private String telefone;
     private String cnpj;
     private String tipoCozinha;
+    private String imageUrl;
 
     // Informação do dono. Não devemos expor todos os dados do usuário,
     // apenas o essencial, então criamos um DTO aninhado.
