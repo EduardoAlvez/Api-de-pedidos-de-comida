@@ -1,0 +1,497 @@
+============================================================================
+INTEGRAÇÃO FRONTEND (ANDROID) — API BACKEND (SPRING BOOT)
+Sistema: Comanda Digital
+============================================================================
+Este documento descreve como o aplicativo Android se integra com a API REST
+do backend Spring Boot, incluindo configuração de rede, autenticação,
+catálogo de endpoints, tratamento de erros e padrões de integração.
+
+============================================================================
+1. VISÃO GERAL DA ARQUITETURA DE INTEGRAÇÃO
+============================================================================
+
+O aplicativo Android (Java nativo) comunica-se com o backend Spring Boot
+via REST/JSON. A arquitetura segue o padrão:
+
+    [Android App] ←→ Retrofit/OkHttp ← HTTP → [Spring Boot API :8080] ←→ [H2/PostgreSQL]
+
+    - Base URL (dev): http://10.0.2.2:8080 (Android Emulator)
+    - Base URL (produção): configurável via build flavors
+    - Formato: JSON (application/json)
+    - Autenticação: JWT Bearer Token (expira em 2 horas)
+    - Documentação: {base}/swagger-ui.html | {base}/v3/api-docs
+
+============================================================================
+2. CONFIGURAÇÃO DE REDE (RETROFIT / OKHTTP)
+============================================================================
+
+O Android utiliza Retrofit 2.9.0 com OkHttp 4.12.0 e Gson para serialização.
+
+    2.1 Inicialização do Retrofit:
+
+        Retrofit retrofit = new Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .client(httpClient.build())
+            .addConverterFactory(GsonConverterFactory.create())
+            .build();
+
+        ApiService api = retrofit.create(ApiService.class);
+
+    2.2 Interceptor de Autenticação:
+
+        OkHttpClient httpClient = new OkHttpClient.Builder()
+            .addInterceptor(chain -> {
+                Request original = chain.request();
+                String token = getTokenFromPreferences();
+                if (token != null) {
+                    Request.Builder builder = original.newBuilder()
+                        .header("Authorization", "Bearer " + token);
+                    return chain.proceed(builder.build());
+                }
+                return chain.proceed(original);
+            })
+            .build();
+
+    2.3 Endpoints públicos (sem token):
+        - POST /login
+        - POST /API/V1/usuarios (cadastro público)
+        - POST /API/V1/pix/webhook (webhook Mercado Pago)
+        - /swagger-ui/**, /v3/api-docs/**, /h2-console/**
+
+    2.4 Timeout padrão:
+        connectTimeout: 30s
+        readTimeout: 30s
+        writeTimeout: 30s
+
+============================================================================
+3. FLUXO DE AUTENTICAÇÃO
+============================================================================
+
+    3.1 Login:
+        1. Usuário informa email + senha
+        2. App chama POST /login com { "email", "senha" }
+        3. Backend valida credenciais e retorna { "token", "type": "Bearer" }
+        4. Se 401 → exibir erro "Credenciais inválidas"
+
+    3.2 Armazenamento do Token:
+        - Utilizar EncryptedSharedPreferences (AndroidX Security)
+        - Chave: "auth_token"
+        - NUNCA armazenar em SharedPreferences comuns ou SQLite
+
+    3.3 Header de Autenticação:
+        Authorization: Bearer <token>
+
+    3.4 Validação no Backend (SecurityFilter):
+        1. Extrai token do header "Authorization"
+        2. Valida assinatura HMAC-SHA256
+        3. Verifica expiração (2 horas)
+        4. Carrega UserDetails (email, senha, roles)
+        5. Popula SecurityContextHolder
+        6. Se inválido/expirado → 401 Unauthorized
+
+    3.5 Roles (Perfis de Acesso):
+        Role            | Acesso
+        -----------------|-----------------------------------------------
+        CLIENTE         | Pedidos delivery, produtos públicos
+        GARCOM          | Mesas, comandas, itens, rateio, PIX
+        DONO_RESTAURANTE| Tudo do próprio restaurante
+
+============================================================================
+4. ISOLAMENTO DE DADOS POR RESTAURANTE
+============================================================================
+
+GARCOM e DONO_RESTAURANTE só acessam dados do restaurante ao qual estão
+vinculados. O backend resolve o restaurante automaticamente:
+
+    Usuario.getRestauranteVinculado()
+
+- GET /API/V1/mesas → filtra pelo restaurante do usuário logado
+- GET /API/V1/produtos/restaurante/{id} → escopo do restaurante
+- Tentar acessar recurso de outro restaurante:
+  - GET/PUT/DELETE → 404 Not Found (não expõe existência)
+  - POST → 403 Forbidden
+
+O frontend NÃO precisa filtrar — o backend já faz isso.
+
+============================================================================
+5. CATÁLOGO DE ENDPOINTS
+============================================================================
+
+5.1 Usuários — /API/V1/usuarios
+---------------------------------------------------------
+POST   /API/V1/usuarios          Pública   Cadastro de usuário
+GET    /API/V1/usuarios/{id}     JWT       Buscar por ID
+PUT    /API/V1/usuarios/{id}     JWT       Atualizar (autoidentificação)
+DELETE /API/V1/usuarios/{id}     JWT       Deletar (autoidentificação)
+
+POST /API/V1/usuarios (Cadastro):
+  Body: {
+    "nome": "string (min 3)",
+    "email": "email válido",
+    "telefone": "string (10-15)",
+    "senha": "string (min 6)"
+  }
+  Obs: Campo 'tipo' removido — backend força CLIENTE no cadastro público
+
+PUT/DELETE — autoidentificação:
+  - Verifica que o usuário autenticado é o mesmo sendo alterado/deletado
+  - Se ID do path ≠ ID do token → 400 "Você só pode alterar/deletar sua própria conta."
+
+5.2 Login — /login
+---------------------------------------------------------
+POST /login   Pública
+  Body:  { "email": "string", "senha": "string" }
+  Resposta: { "token": "jwt...", "type": "Bearer" }
+  Erro: 401 { "error": "Credenciais inválidas" }
+
+5.3 Restaurantes — /API/V1/restaurantes
+---------------------------------------------------------
+POST   /API/V1/restaurantes                   JWT       Criar
+GET    /API/V1/restaurantes                    JWT       Listar todos
+GET    /API/V1/restaurantes/{id}               JWT       Buscar por ID
+PUT    /API/V1/restaurantes/{id}               DONO      Atualizar
+DELETE /API/V1/restaurantes/{id}               DONO      Deletar
+
+POST Body: {
+  "nome": "string (min 2)",
+  "endereco": "string",
+  "telefone": "string",
+  "cnpj": "14 digitos",
+  "tipoCozinha": "string",
+  "usuarioId": Long
+}
+
+5.4 Produtos — /API/V1/produtos
+---------------------------------------------------------
+POST   /API/V1/produtos                              JWT       Criar
+GET    /API/V1/produtos/{id}                          JWT       Buscar por ID
+PUT    /API/V1/produtos/{id}                          JWT       Atualizar
+DELETE /API/V1/produtos/{id}                          JWT       Deletar
+GET    /API/V1/produtos/restaurante/{restauranteId}   JWT       Listar por restaurante
+
+POST Body: {
+  "nome": "string (min 3)",
+  "descricao": "string",
+  "preco": BigDecimal,
+  "precoMeia": BigDecimal (opcional),
+  "categoria": "string",
+  "disponivel": boolean,
+  "restauranteId": Long
+}
+
+5.5 Garçons — /API/V1/restaurantes/{restauranteId}/garcons
+---------------------------------------------------------
+POST   .../{restauranteId}/garcons             DONO      Criar e vincular garçom
+POST   .../{restauranteId}/garcons/vincular    DONO      Vincular garçom existente
+GET    .../{restauranteId}/garcons             JWT       Listar garçons
+DELETE .../{restauranteId}/garcons/{usuarioId} DONO      Desvincular garçom
+
+Criar (POST /garcons):
+  Body: { "nome": String, "email": String, "telefone": String, "senha": String }
+  Resposta: 201 → UsuarioResponseDTO (tipo forçado para GARCOM)
+  Obs: Cria o usuário + vincula ao restaurante em 1 passo
+
+Vincular existente (POST /garcons/vincular):
+  Body: { "usuarioId": Long }
+  Resposta: 200 OK
+  Obs: Garçom deve existir, ter role GARCOM e não estar vinculado
+
+5.6 Mesas — /API/V1/mesas
+---------------------------------------------------------
+POST   /API/V1/mesas                               JWT       Criar mesa
+GET    /API/V1/mesas                                JWT       Listar (filtro automático)
+GET    /API/V1/mesas/{id}                           JWT       Buscar por ID
+PUT    /API/V1/mesas/{id}                           JWT       Atualizar nomeCliente
+POST   /API/V1/mesas/{id}/encerrar                  DONO      Encerrar mesa
+DELETE /API/V1/mesas/{id}                           JWT       Deletar mesa
+POST   /API/V1/mesas/{mesaId}/compartilhados        JWT       Add item compartilhado
+GET    /API/V1/mesas/{mesaId}/compartilhados         JWT       Listar itens compatilhados
+PUT    /API/V1/mesas/{mesaId}/compartilhados/{id}   JWT       Atualizar item compartilhado
+DELETE /API/V1/mesas/{mesaId}/compartilhados/{id}   JWT       Remover item compartilhado
+
+POST /API/V1/mesas:
+  Body: { "restauranteId": Long, "nomeCliente": String }
+  Resposta: 201 → MesaResponseDTO { id, nomeCliente, status, dataAbertura, ... }
+
+DELETE /API/V1/mesas/{id}:
+  - Não pode ter comandas com status ABERTA ou AGUARDANDO_PIX
+  - Se houver → 400 "Existe(m) comanda(s) aberta(s) nesta mesa."
+
+POST /API/V1/mesas/{id}/encerrar:
+  - Apenas DONO_RESTAURANTE
+  - Comandas abertas → CANCELADA
+  - Mesa volta para LIVRE
+
+5.7 Comandas — /API/V1
+---------------------------------------------------------
+POST   /API/V1/mesas/{mesaId}/comandas          JWT       Abrir comanda
+GET    /API/V1/comandas?mesaId={mesaId}         JWT       Listar comandas da mesa
+GET    /API/V1/comandas/{id}                    JWT       Buscar comanda por ID
+POST   /API/V1/comandas/{id}/itens              JWT       Adicionar item na comanda
+PUT    /API/V1/comandas/{comandaId}/itens/{id}  JWT       Atualizar item
+DELETE /API/V1/comandas/{comandaId}/itens/{id}  JWT       Remover item
+POST   /API/V1/comandas/{id}/rateio             JWT       Rateio (dividir conta)
+POST   /API/V1/comandas/{id}/fechar             JWT       Fechar comanda
+
+POST /API/V1/mesas/{mesaId}/comandas (Abrir comanda):
+  Body: {
+    "clienteNome": "string",
+    "itens": [
+      { "produtoId": Long, "quantidade": Integer, "compartilhado": boolean }
+    ]
+  }
+  Resposta: 201 → ComandaResponseDTO
+  - Se mesa estava LIVRE → passa para OCUPADA
+
+POST /API/V1/comandas/{id}/rateio:
+  Body: { "produtoId": Long, "valorPago": BigDecimal }
+  - Registra pagamento parcial de item compartilhado
+  - Valida que valor não ultrapassa saldo restante
+
+POST /API/V1/comandas/{id}/fechar:
+  Body: { "formaPagamento": "DINHEIRO | CARTAO_DE_CREDITO | MAQUININHA" }
+  - PIX NÃO é aceito aqui → usa endpoint próprio /pix
+  - Se última comanda da mesa → mesa volta para LIVRE
+
+5.8 PIX — /API/V1
+---------------------------------------------------------
+POST /API/V1/comandas/{id}/pix   JWT   Gerar QR Code PIX (sem body)
+GET  /API/V1/comandas/{id}/pix   JWT   Status da transação PIX
+
+POST /API/V1/comandas/{id}/pix:
+  Resposta: 201 → {
+    "id": Long,
+    "comandaId": Long,
+    "valor": BigDecimal,
+    "qrCodeBase64": "iVBOR...",
+    "payloadCopiaCola": "0002012658...",
+    "txId": "tx-...",
+    "status": "AGUARDANDO | CONFIRMADO | EXPIROU",
+    "dataCriacao": "ISO datetime",
+    "dataConfirmacao": null
+  }
+  - Backend calcula saldo = comanda.valorTotal - somaDosRateios
+
+GET /API/V1/comandas/{id}/pix:
+  - Polling a cada 5-10s até status CONFIRMADO
+
+POST /API/V1/pix/webhook (Público - Mercado Pago):
+  - Endpoint para notificações de confirmação de pagamento
+  - Chamado pelo Mercado Pago quando PIX é pago
+
+5.9 Pedidos (Delivery) — /API/V1/pedidos
+---------------------------------------------------------
+POST   /API/V1/pedidos                      JWT       Criar pedido
+GET    /API/V1/pedidos/{id}                 JWT       Buscar por ID
+GET    /API/V1/pedidos/usuario/{usuarioId}  JWT       Listar por usuário
+PUT    /API/V1/pedidos/{id}/status          JWT       Atualizar status
+
+POST /API/V1/pedidos:
+  Body: {
+    "restauranteId": Long,
+    "formaDePagamento": "PIX | CARTAO_DE_CREDITO | MAQUININHA | DINHEIRO",
+    "origem": "DELIVERY | PRESENCIAL",
+    "tipoConsumo": "COMER_AQUI | VIAGEM",
+    "usuarioId": Long,
+    "nomeUsuarioConvidado": String,
+    "telefoneUsuarioConvidado": String,
+    "emailUsuarioConvidado": String,
+    "regiaoEntregaId": Long,
+    "enderecoDeEntrega": String,
+    "observacoes": String,
+    "itens": [ { "produtoId": Long, "quantidade": Integer, "tamanho": "INTEIRA | MEIA" } ]
+  }
+
+PUT /API/V1/pedidos/{id}/status:
+  Body: { "novoStatus": "CONFIRMADO | EM_PREPARACAO | A_CAMINHO | ENTREGUE | CANCELADO" }
+
+Fluxo de status do pedido:
+  AGUARDANDO_CONFIRMACAO → CONFIRMADO → EM_PREPARACAO → A_CAMINHO → ENTREGUE
+                                                      ↘ CANCELADO
+                                                      ↘ ENTREGADOR_ROUBADO
+
+5.10 Regiões de Entrega — /API/V1/restaurantes/{restauranteId}/regioes
+---------------------------------------------------------
+GET    .../regioes        JWT   Listar
+GET    .../regioes/{id}   JWT   Buscar
+POST   .../regioes        JWT   Criar
+PUT    .../regioes/{id}   JWT   Atualizar
+DELETE .../regioes/{id}   JWT   Deletar
+
+RegiaoEntrega: { id: Long, nome: String, valorFrete: BigDecimal }
+
+============================================================================
+6. TRATAMENTO DE ERROS
+============================================================================
+
+Todas as respostas de erro seguem o formato:
+
+    StandardError (RFC 7807):
+    {
+      "timestamp": "ISO datetime",
+      "status": 400,
+      "error": "Título do erro",
+      "message": "Detalhes",
+      "path": "/API/V1/..."
+    }
+
+    ValidationError (para @Valid - 422):
+    {
+      "timestamp": "ISO datetime",
+      "status": 422,
+      "error": "Erro de validação",
+      "message": "Um ou mais campos estão inválidos.",
+      "path": "/API/V1/...",
+      "errors": [
+        { "fieldName": "nome", "message": "O nome deve ter no mínimo 3 caracteres." }
+      ]
+    }
+
+6.1 Tabela de códigos HTTP:
+
+  Status | Quando ocorre
+  -------|---------------------------------------------------------------
+  200    | Sucesso (GET, PUT, POST de fechar/rateio)
+  201    | Criado (POST de mesa, comanda, pix, usuário, restaurante)
+  204    | Sucesso sem corpo (DELETE)
+  400    | Erro de negócio/validação (validação de campos ou regras)
+  401    | Credenciais inválidas (login), token ausente/expirado
+  403    | Acesso negado (recurso de outro restaurante, role insuficiente)
+  404    | Recurso não encontrado (ou recurso de outro restaurante)
+  422    | Erro de validação de campos (@Valid)
+
+6.2 Mensagens de erro comuns para exibição no frontend:
+
+  400 "Garcom nao vinculado a nenhum restaurante."
+  400 "Existe(m) comanda(s) aberta(s) nesta mesa."
+  400 "Voce so pode alterar/deletar sua propria conta."
+  400 "Garcom ja vinculado a um restaurante."
+  401 "Credenciais invalidas"
+  403 "Acesso negado: voce nao pode criar mesas em outro restaurante."
+  404 "Recurso nao encontrado"
+  422 "Email ja cadastrado"
+
+============================================================================
+7. PADRÕES DE INTEGRAÇÃO
+============================================================================
+
+7.1 Polling (PIX):
+  - POST /API/V1/comandas/{id}/pix → gera QR Code
+  - Polling: GET /API/V1/comandas/{id}/pix a cada 5 segundos
+  - Parar quando status = CONFIRMADO ou EXPIROU
+  - Implementar com Handler.postDelayed() ou coroutines
+
+7.2 Autoidentificação (Usuários):
+  - PUT/DELETE /API/V1/usuarios/{id} exigem que o ID do path
+    corresponda ao ID do token JWT
+  - O frontend deve usar o ID do usuário logado no path
+
+7.3 Criação de Garçom em 1 Passo:
+  - POST /API/V1/restaurantes/{id}/garcons → cria usuário + vincula
+  - O frontend NÃO precisa chamar /API/V1/usuarios primeiro
+
+7.4 Rateio:
+  - O rateio registra pagamento parcial de item compartilhado
+  - Backend valida que valor não ultrapassa saldo restante
+  - O frontend exibe o saldo restante de cada item para o usuário
+
+7.5 Itens Compartilhados vs. Individuais:
+  - Itens compartilhados (isShared = true) ficam na mesa
+  - Itens individuais ficam em comandas específicas
+  - Itens compartilhados: POST /API/V1/mesas/{id}/compartilhados
+  - Itens individuais: POST /API/V1/comandas/{id}/itens
+
+7.6 Fechamento de Conta:
+  - Se for PIX → POST /API/V1/comandas/{id}/pix (NÃO usar /fechar com PIX)
+  - Se for presencial → POST /API/V1/comandas/{id}/fechar
+  - Se for a última comanda da mesa → mesa volta para LIVRE
+
+============================================================================
+8. MAPEAMENTO TELA → API
+============================================================================
+
+Tela/Componente Android           | Chamada(s) de API
+-----------------------------------|------------------------------------------------
+LoginActivity                      | POST /login
+MainActivity (Dashboard Mesas)     | GET /API/V1/mesas
+  Card "+" (Nova Mesa)             | POST /API/V1/mesas
+  Ícone lixeira (Excluir)          | DELETE /API/V1/mesas/{id}
+ComandaActivity                    | GET /API/V1/comandas?mesaId={mesaId}
+  Botão "+" (Lançar Item)          | POST /API/V1/comandas/{id}/itens
+  Editar Item                      | PUT /API/V1/comandas/{id}/itens/{itemId}
+  Excluir Item                     | DELETE /API/V1/comandas/{id}/itens/{itemId}
+  Fechar Conta (Presencial)        | POST /API/V1/comandas/{id}/fechar
+  Rateio                           | POST /API/V1/comandas/{id}/rateio
+  PIX                              | POST /API/V1/comandas/{id}/pix
+  Polling PIX                      | GET /API/V1/comandas/{id}/pix (loop)
+CardapioActivity                   | GET /API/V1/produtos/restaurante/{restauranteId}
+ReviewOrderActivity                | POST /API/V1/pedidos (delivery)
+NewMesaDialog                      | POST /API/V1/mesas
+LaunchForClientDialog              | GET /API/V1/clientes ou lista local
+
+============================================================================
+9. MODELOS DE DADOS (RESUMO)
+============================================================================
+
+9.1 LoginRequest / LoginResponse
+  LoginRequest:  { email: String, senha: String }
+  LoginResponse: { token: String, type: String }
+
+9.2 Usuario
+  UsuarioRequest:  { nome: String, email: String, telefone: String, senha: String }
+  UsuarioResponse: { id: Long, nome: String, email: String, telefone: String,
+                     tipo: "CLIENTE | DONO_RESTAURANTE | GARCOM" }
+
+9.3 Restaurante
+  RestauranteRequest:  { nome, endereco, telefone, cnpj, tipoCozinha, usuarioId }
+  RestauranteResponse: { id, nome, endereco, telefone, cnpj, tipoCozinha, imageUrl }
+
+9.4 Produto
+  ProdutoRequest:  { nome, descricao, preco, precoMeia, categoria, disponivel, restauranteId }
+  ProdutoResponse: { id, nome, descricao, preco, precoMeia, categoria, imageUrl, disponivel }
+
+9.5 Mesa
+  MesaRequest:  { restauranteId: Long, nomeCliente: String }
+  MesaResponse: { id, nomeCliente, status: "LIVRE | OCUPADA", dataAbertura,
+                  restauranteId, restauranteNome }
+
+9.6 Comanda
+  ComandaRequest:  { clienteNome: String, itens: [{ produtoId, quantidade, compartilhado }] }
+  ComandaResponse: { id, mesaId, garcomNome, clienteNome, status: "ABERTA | AGUARDANDO_PIX | PAGA",
+                     valorTotal, dataAbertura, dataFechamento, itens: [ComandaItemResponse],
+                     rateios: [ComandaRateio] }
+  ComandaItemRequest:  { produtoId: Long, quantidade: Integer, compartilhado: Boolean }
+  ComandaItemResponse: { id, produtoId, nomeProduto, quantidade, precoUnitario, subtotal, compartilhado }
+  FecharComandaRequest: { formaPagamento: "DINHEIRO | CARTAO_DE_CREDITO | MAQUININHA" }
+  RateioRequest: { produtoId: Long, valorPago: BigDecimal }
+
+9.7 PIX
+  PixResponse: { id, comandaId, valor, qrCodeBase64, payloadCopiaCola,
+                 txId, status: "AGUARDANDO | CONFIRMADO | EXPIROU",
+                 dataCriacao, dataConfirmacao }
+
+9.8 ItemCompartilhado (Mesa)
+  ItemCompartilhadoRequest:  { produtoId: Long, quantidade: Integer, observacao: String }
+  ItemCompartilhadoResponse: { id, nomeProduto, quantidade, precoUnitario, observacao }
+
+9.9 Pedido (Delivery)
+  PedidoRequest:  { restauranteId, formaDePagamento, origem, tipoConsumo, usuarioId,
+                    nomeUsuarioConvidado, telefoneUsuarioConvidado, emailUsuarioConvidado,
+                    regiaoEntregaId, enderecoDeEntrega, observacoes,
+                    itens: [{ produtoId, quantidade, tamanho }] }
+  PedidoResponse: { id, codigoPedido, dataDoPedido, status, origem, tipoConsumo,
+                    subtotal, taxaEntrega, valorTotal, enderecoDeEntrega, itens: [ItemPedido] }
+
+============================================================================
+10. OBSERVAÇÕES TÉCNICAS
+============================================================================
+
+- Não há paginação: todos os endpoints de listagem retornam arrays completos
+- Formato de data: ISO 8601 (yyyy-MM-dd'T'HH:mm:ss)
+- Valores monetários: BigDecimal em string (ex: "25.90")
+- Imagens (QR Code): Base64 string no campo qrCodeBase64
+- CORS: Liberado para qualquer origem (permitAll)
+- Retrofit + Gson é a lib recomendada para HTTP no Android
+- Token JWT expira em 2 horas — redirecionar para login se receber 401
+- O isolamento de dados é feito pelo backend: GARCOM e DONO só veem o
+  próprio restaurante. O frontend não precisa filtrar nada.

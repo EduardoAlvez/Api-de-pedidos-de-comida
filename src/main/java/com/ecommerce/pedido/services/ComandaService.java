@@ -5,6 +5,7 @@ import com.ecommerce.pedido.models.*;
 import com.ecommerce.pedido.models.enums.FormaPagamento;
 import com.ecommerce.pedido.models.enums.StatusComanda;
 import com.ecommerce.pedido.models.enums.StatusMesa;
+import com.ecommerce.pedido.models.enums.TamanhoPorcao;
 import com.ecommerce.pedido.repositories.*;
 import com.ecommerce.pedido.services.exceptions.*;
 import org.springframework.stereotype.Service;
@@ -27,17 +28,20 @@ public class ComandaService {
     private final ProdutoRepository produtoRepository;
     private final ComandaRateioRepository comandaRateioRepository;
     private final ComandaItemRepository comandaItemRepository;
+    private final ItemCompartilhadoRepository itemCompartilhadoRepository;
 
     public ComandaService(ComandaRepository comandaRepository, MesaRepository mesaRepository,
                           UsuarioRepository usuarioRepository, ProdutoRepository produtoRepository,
                           ComandaRateioRepository comandaRateioRepository,
-                          ComandaItemRepository comandaItemRepository) {
+                          ComandaItemRepository comandaItemRepository,
+                          ItemCompartilhadoRepository itemCompartilhadoRepository) {
         this.comandaRepository = comandaRepository;
         this.mesaRepository = mesaRepository;
         this.usuarioRepository = usuarioRepository;
         this.produtoRepository = produtoRepository;
         this.comandaRateioRepository = comandaRateioRepository;
         this.comandaItemRepository = comandaItemRepository;
+        this.itemCompartilhadoRepository = itemCompartilhadoRepository;
     }
 
     @Transactional
@@ -70,14 +74,18 @@ public class ComandaService {
                 Produto produto = produtoRepository.findById(itemDTO.getProdutoId())
                         .orElseThrow(() -> new ProdutoNaoEncontradoException("Produto não encontrado."));
 
+                TamanhoPorcao tamanho = itemDTO.getTamanho() != null ? itemDTO.getTamanho() : TamanhoPorcao.INTEIRA;
+                BigDecimal precoUnitario = obterPreco(produto, tamanho);
+
                 ComandaItem item = new ComandaItem();
                 item.setComanda(comanda);
                 item.setProduto(produto);
                 item.setQuantidade(itemDTO.getQuantidade());
-                item.setPrecoUnitario(produto.getPreco());
+                item.setPrecoUnitario(precoUnitario);
+                item.setTamanho(tamanho);
 
                 itens.add(item);
-                valorTotal = valorTotal.add(produto.getPreco().multiply(BigDecimal.valueOf(itemDTO.getQuantidade())));
+                valorTotal = valorTotal.add(precoUnitario.multiply(BigDecimal.valueOf(itemDTO.getQuantidade())));
             }
         }
 
@@ -131,14 +139,18 @@ public class ComandaService {
         Produto produto = produtoRepository.findById(requestDTO.getProdutoId())
                 .orElseThrow(() -> new ProdutoNaoEncontradoException("Produto não encontrado."));
 
+        TamanhoPorcao tamanho = requestDTO.getTamanho() != null ? requestDTO.getTamanho() : TamanhoPorcao.INTEIRA;
+        BigDecimal precoUnitario = obterPreco(produto, tamanho);
+
         ComandaItem item = new ComandaItem();
         item.setComanda(comanda);
         item.setProduto(produto);
         item.setQuantidade(requestDTO.getQuantidade());
-        item.setPrecoUnitario(produto.getPreco());
+        item.setPrecoUnitario(precoUnitario);
+        item.setTamanho(tamanho);
 
         comanda.getItens().add(item);
-        comanda.setValorTotal(comanda.getValorTotal().add(produto.getPreco().multiply(BigDecimal.valueOf(requestDTO.getQuantidade()))));
+        comanda.setValorTotal(comanda.getValorTotal().add(precoUnitario.multiply(BigDecimal.valueOf(requestDTO.getQuantidade()))));
         ComandaItem savedItem = comandaItemRepository.save(item);
         comandaRepository.save(comanda);
 
@@ -277,11 +289,22 @@ public class ComandaService {
 
         if (abertasOuPendentes == 0) {
             Mesa mesa = comanda.getMesa();
+            itemCompartilhadoRepository.deleteAllByMesa_Id(mesa.getId());
             mesa.setStatus(StatusMesa.LIVRE);
             mesaRepository.save(mesa);
         }
 
         return toResponseDTO(comanda);
+    }
+
+    private BigDecimal obterPreco(Produto produto, TamanhoPorcao tamanho) {
+        if (tamanho == TamanhoPorcao.MEIA) {
+            if (produto.getPrecoMeia() == null) {
+                throw new ValidacaoNegocioException("O produto '" + produto.getNome() + "' nao oferece meia porcao.");
+            }
+            return produto.getPrecoMeia();
+        }
+        return produto.getPreco();
     }
 
     private void validarComandaRestaurante(Comanda comanda, Usuario usuarioLogado) {
@@ -331,6 +354,7 @@ public class ComandaService {
         dto.setQuantidade(item.getQuantidade());
         dto.setPrecoUnitario(item.getPrecoUnitario());
         dto.setSubtotal(item.getPrecoUnitario().multiply(BigDecimal.valueOf(item.getQuantidade())));
+        dto.setTamanho(item.getTamanho());
         return dto;
     }
 

@@ -10,4 +10,6 @@ import java.util.List;
 public interface ItemCompartilhadoRepository extends JpaRepository<ItemCompartilhado, Long> {
 
     List<ItemCompartilhado> findAllByMesa_Id(Long mesaId);
+
+    void deleteAllByMesa_Id(Long mesaId);
 }

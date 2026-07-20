@@ -27,7 +27,7 @@ class GarcomControllerTest extends BaseControllerTest {
                 { "usuarioId": 5 }
                 """)
         .when()
-            .post("/API/V1/restaurantes/1/garcons")
+            .post("/API/V1/restaurantes/1/garcons/vincular")
         .then()
             .statusCode(200);
     }
@@ -43,7 +43,7 @@ class GarcomControllerTest extends BaseControllerTest {
                 { "usuarioId": 5 }
                 """)
         .when()
-            .post("/API/V1/restaurantes/1/garcons")
+            .post("/API/V1/restaurantes/1/garcons/vincular")
         .then()
             .statusCode(403);
     }
@@ -60,7 +60,7 @@ class GarcomControllerTest extends BaseControllerTest {
                 { "usuarioId": 5 }
                 """)
         .when()
-            .post("/API/V1/restaurantes/1/garcons")
+            .post("/API/V1/restaurantes/1/garcons/vincular")
         .then()
             .statusCode(403);
     }

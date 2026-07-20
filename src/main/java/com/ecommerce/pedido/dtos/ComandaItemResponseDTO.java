@@ -1,5 +1,6 @@
 package com.ecommerce.pedido.dtos;
 
+import com.ecommerce.pedido.models.enums.TamanhoPorcao;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,4 +16,5 @@ public class ComandaItemResponseDTO {
     private Integer quantidade;
     private BigDecimal precoUnitario;
     private BigDecimal subtotal;
+    private TamanhoPorcao tamanho;
 }

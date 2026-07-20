@@ -1,5 +1,6 @@
 package com.ecommerce.pedido.models;
 
+import com.ecommerce.pedido.models.enums.TamanhoPorcao;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
@@ -31,4 +32,7 @@ public class ItemCompartilhado {
     private Integer quantidade;
     private BigDecimal precoUnitario;
     private String observacao;
+
+    @Enumerated(EnumType.STRING)
+    private TamanhoPorcao tamanho = TamanhoPorcao.INTEIRA;
 }

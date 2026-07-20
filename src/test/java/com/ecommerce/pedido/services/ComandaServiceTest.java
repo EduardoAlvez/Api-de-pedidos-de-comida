@@ -50,6 +50,9 @@ class ComandaServiceTest extends BaseServiceTest {
     @Mock
     private ComandaItemRepository comandaItemRepository;
 
+    @Mock
+    private ItemCompartilhadoRepository itemCompartilhadoRepository;
+
     @InjectMocks
     private ComandaService comandaService;
 
@@ -252,6 +255,7 @@ class ComandaServiceTest extends BaseServiceTest {
         when(comandaRepository.countByMesa_IdAndStatus(1L, StatusComanda.ABERTA)).thenReturn(0L);
         when(comandaRepository.countByMesa_IdAndStatus(1L, StatusComanda.AGUARDANDO_PIX)).thenReturn(0L);
         when(comandaRepository.save(any(Comanda.class))).thenReturn(comanda);
+        doNothing().when(itemCompartilhadoRepository).deleteAllByMesa_Id(anyLong());
 
         ComandaResponseDTO response = comandaService.fechar(1L, FormaPagamento.DINHEIRO, garcom);
 

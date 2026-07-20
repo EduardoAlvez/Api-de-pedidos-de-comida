@@ -1,5 +1,6 @@
 package com.ecommerce.pedido.dtos;
 
+import com.ecommerce.pedido.models.enums.TamanhoPorcao;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.Getter;
@@ -17,4 +18,6 @@ public class ItemCompartilhadoRequestDTO {
     private Integer quantidade;
 
     private String observacao;
+
+    private TamanhoPorcao tamanho = TamanhoPorcao.INTEIRA;
 }
