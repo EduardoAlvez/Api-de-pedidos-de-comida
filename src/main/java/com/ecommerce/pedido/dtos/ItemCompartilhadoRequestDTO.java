@@ -8,7 +8,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class ComandaItemRequestDTO {
+public class ItemCompartilhadoRequestDTO {
 
     @NotNull(message = "O ID do produto é obrigatório.")
     private Long produtoId;
@@ -16,6 +16,8 @@ public class ComandaItemRequestDTO {
     @NotNull(message = "A quantidade é obrigatória.")
     @Positive(message = "A quantidade deve ser positiva.")
     private Integer quantidade;
+
+    private String observacao;
 
     private TamanhoPorcao tamanho = TamanhoPorcao.INTEIRA;
 }

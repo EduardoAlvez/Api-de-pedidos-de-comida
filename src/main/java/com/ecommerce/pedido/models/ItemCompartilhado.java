@@ -13,7 +13,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
-public class ComandaItem {
+public class ItemCompartilhado {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,8 +22,8 @@ public class ComandaItem {
 
     @JsonBackReference
     @ManyToOne
-    @JoinColumn(name = "comanda_id")
-    private Comanda comanda;
+    @JoinColumn(name = "mesa_id")
+    private Mesa mesa;
 
     @ManyToOne
     @JoinColumn(name = "produto_id")
@@ -31,6 +31,7 @@ public class ComandaItem {
 
     private Integer quantidade;
     private BigDecimal precoUnitario;
+    private String observacao;
 
     @Enumerated(EnumType.STRING)
     private TamanhoPorcao tamanho = TamanhoPorcao.INTEIRA;

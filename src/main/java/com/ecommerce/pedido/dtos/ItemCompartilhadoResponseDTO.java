@@ -8,13 +8,13 @@ import java.math.BigDecimal;
 
 @Getter
 @Setter
-public class ComandaItemResponseDTO {
+public class ItemCompartilhadoResponseDTO {
 
     private Long id;
     private Long produtoId;
     private String nomeProduto;
     private Integer quantidade;
     private BigDecimal precoUnitario;
-    private BigDecimal subtotal;
+    private String observacao;
     private TamanhoPorcao tamanho;
 }
