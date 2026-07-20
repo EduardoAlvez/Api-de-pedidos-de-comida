@@ -2,10 +2,12 @@ package com.ecommerce.pedido.models;
 
 import com.ecommerce.pedido.models.enums.StatusMesa;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -31,4 +33,8 @@ public class Mesa {
     @ManyToOne
     @JoinColumn(name = "restaurante_id")
     private Restaurante restaurante;
+
+    @JsonManagedReference
+    @OneToMany(mappedBy = "mesa", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ItemCompartilhado> itensCompartilhados;
 }

@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -16,4 +17,5 @@ public class MesaResponseDTO {
     private LocalDateTime dataAbertura;
     private Long restauranteId;
     private String restauranteNome;
+    private List<ItemCompartilhadoResponseDTO> itensCompartilhados;
 }

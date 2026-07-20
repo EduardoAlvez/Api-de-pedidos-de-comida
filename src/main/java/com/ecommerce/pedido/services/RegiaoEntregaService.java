@@ -4,10 +4,13 @@ import com.ecommerce.pedido.dtos.RegiaoEntregaRequestDTO;
 import com.ecommerce.pedido.dtos.RegiaoEntregaResponseDTO;
 import com.ecommerce.pedido.models.RegiaoEntrega;
 import com.ecommerce.pedido.models.Restaurante;
+import com.ecommerce.pedido.models.Usuario;
 import com.ecommerce.pedido.repositories.RegiaoEntregaRepository;
 import com.ecommerce.pedido.repositories.RestauranteRepository;
+import com.ecommerce.pedido.services.exceptions.EntidadeNaoEncontradaException;
 import com.ecommerce.pedido.services.exceptions.RegiaoEntregaNaoEncontradaException;
 import com.ecommerce.pedido.services.exceptions.RestauranteNaoEncontradoException;
+import com.ecommerce.pedido.services.exceptions.ValidacaoNegocioException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,47 +30,65 @@ public class RegiaoEntregaService {
     }
 
     @Transactional(readOnly = true)
-    public List<RegiaoEntregaResponseDTO> listar(Long restauranteId) {
-        return regiaoEntregaRepository.findAllByRestaurante_Id(restauranteId)
+    public List<RegiaoEntregaResponseDTO> listar(Usuario usuarioLogado) {
+        Restaurante restauranteVinculado = usuarioLogado.getRestauranteVinculado();
+        if (restauranteVinculado == null) {
+            throw new ValidacaoNegocioException("Usuario nao vinculado a nenhum restaurante.");
+        }
+        return regiaoEntregaRepository.findAllByRestaurante_Id(restauranteVinculado.getId())
                 .stream()
                 .map(this::toResponseDTO)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
-    public RegiaoEntregaResponseDTO buscarPorId(Long id) {
+    public RegiaoEntregaResponseDTO buscarPorId(Long id, Usuario usuarioLogado) {
         RegiaoEntrega regiao = regiaoEntregaRepository.findById(id)
                 .orElseThrow(() -> new RegiaoEntregaNaoEncontradaException("Região de entrega não encontrada com o ID: " + id));
+        validarAcessoRestaurante(regiao.getRestaurante().getId(), usuarioLogado);
         return toResponseDTO(regiao);
     }
 
     @Transactional
-    public RegiaoEntregaResponseDTO criar(Long restauranteId, RegiaoEntregaRequestDTO requestDTO) {
-        Restaurante restaurante = restauranteRepository.findById(restauranteId)
-                .orElseThrow(() -> new RestauranteNaoEncontradoException("Restaurante não encontrado com o ID: " + restauranteId));
+    public RegiaoEntregaResponseDTO criar(RegiaoEntregaRequestDTO requestDTO, Usuario usuarioLogado) {
+        Restaurante restauranteVinculado = usuarioLogado.getRestauranteVinculado();
+        if (restauranteVinculado == null) {
+            throw new ValidacaoNegocioException("Usuario nao vinculado a nenhum restaurante.");
+        }
 
         RegiaoEntrega regiao = new RegiaoEntrega();
         BeanUtils.copyProperties(requestDTO, regiao);
-        regiao.setRestaurante(restaurante);
+        regiao.setRestaurante(restauranteVinculado);
 
         return toResponseDTO(regiaoEntregaRepository.save(regiao));
     }
 
     @Transactional
-    public RegiaoEntregaResponseDTO atualizar(Long id, RegiaoEntregaRequestDTO requestDTO) {
+    public RegiaoEntregaResponseDTO atualizar(Long id, RegiaoEntregaRequestDTO requestDTO, Usuario usuarioLogado) {
         RegiaoEntrega regiao = regiaoEntregaRepository.findById(id)
                 .orElseThrow(() -> new RegiaoEntregaNaoEncontradaException("Região de entrega não encontrada com o ID: " + id));
+        validarAcessoRestaurante(regiao.getRestaurante().getId(), usuarioLogado);
 
         BeanUtils.copyProperties(requestDTO, regiao);
         return toResponseDTO(regiaoEntregaRepository.save(regiao));
     }
 
     @Transactional
-    public void deletar(Long id) {
-        if (!regiaoEntregaRepository.existsById(id)) {
-            throw new RegiaoEntregaNaoEncontradaException("Região de entrega não encontrada com o ID: " + id);
-        }
+    public void deletar(Long id, Usuario usuarioLogado) {
+        RegiaoEntrega regiao = regiaoEntregaRepository.findById(id)
+                .orElseThrow(() -> new RegiaoEntregaNaoEncontradaException("Região de entrega não encontrada com o ID: " + id));
+        validarAcessoRestaurante(regiao.getRestaurante().getId(), usuarioLogado);
         regiaoEntregaRepository.deleteById(id);
+    }
+
+    private void validarAcessoRestaurante(Long restauranteId, Usuario usuarioLogado) {
+        Restaurante restauranteVinculado = usuarioLogado.getRestauranteVinculado();
+        if (restauranteVinculado == null) {
+            throw new ValidacaoNegocioException("Usuario nao vinculado a nenhum restaurante.");
+        }
+        if (!restauranteVinculado.getId().equals(restauranteId)) {
+            throw new EntidadeNaoEncontradaException("Região de entrega não encontrada com o ID: " + restauranteId);
+        }
     }
 
     private RegiaoEntregaResponseDTO toResponseDTO(RegiaoEntrega regiao) {

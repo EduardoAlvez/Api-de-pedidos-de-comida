@@ -46,5 +46,8 @@ public class Restaurante {
     @JoinColumn(name = "usuario_id", nullable = false, unique = true)
     private Usuario usuario; // cada restaurante pertence a 1 usuario
 
+    @JsonManagedReference
+    @OneToMany(mappedBy = "restauranteTrabalho")
+    private List<Usuario> garcons = new ArrayList<>();
 
 }

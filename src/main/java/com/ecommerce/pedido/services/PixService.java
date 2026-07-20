@@ -4,7 +4,9 @@ import com.ecommerce.pedido.dtos.PixResponseDTO;
 import com.ecommerce.pedido.dtos.WebhookMercadoPagoDTO;
 import com.ecommerce.pedido.models.Comanda;
 import com.ecommerce.pedido.models.ComandaRateio;
+import com.ecommerce.pedido.models.Restaurante;
 import com.ecommerce.pedido.models.TransacaoPix;
+import com.ecommerce.pedido.models.Usuario;
 import com.ecommerce.pedido.models.enums.StatusComanda;
 import com.ecommerce.pedido.models.enums.StatusTransacaoPix;
 import com.ecommerce.pedido.repositories.ComandaRepository;
@@ -48,9 +50,10 @@ public class PixService {
     }
 
     @Transactional
-    public PixResponseDTO gerarQrCode(Long comandaId) {
+    public PixResponseDTO gerarQrCode(Long comandaId, Usuario usuarioLogado) {
         Comanda comanda = comandaRepository.findById(comandaId)
                 .orElseThrow(() -> new EntidadeNaoEncontradaException("Comanda não encontrada."));
+        validarComandaRestaurante(comanda, usuarioLogado);
 
         if (comanda.getStatus() == StatusComanda.PAGA) {
             throw new ValidacaoNegocioException("Comanda já está paga.");
@@ -99,7 +102,10 @@ public class PixService {
         return toResponseDTO(transacao);
     }
 
-    public PixResponseDTO consultarStatus(Long comandaId) {
+    public PixResponseDTO consultarStatus(Long comandaId, Usuario usuarioLogado) {
+        Comanda comanda = comandaRepository.findById(comandaId)
+                .orElseThrow(() -> new EntidadeNaoEncontradaException("Comanda nao encontrada."));
+        validarComandaRestaurante(comanda, usuarioLogado);
         List<TransacaoPix> transacoes = transacaoPixRepository
                 .findAllByComanda_Id(comandaId);
         TransacaoPix transacao = transacoes.stream()
@@ -113,9 +119,10 @@ public class PixService {
     public void processarWebhook(WebhookMercadoPagoDTO payload, String assinatura,
                                   String xRequestId, String dataId) {
         if (assinatura == null || assinatura.isBlank()) {
-            log.warn("Webhook sem assinatura — processando mesmo assim (QR Code não suporta validação)");
-        } else if (!validarAssinatura(dataId, xRequestId, assinatura)) {
-            log.warn("Assinatura do webhook inválida — processando mesmo assim (QR Code não suporta validação)");
+            throw new ValidacaoAssinaturaException("Webhook sem assinatura.");
+        }
+        if (!validarAssinatura(dataId, xRequestId, assinatura)) {
+            throw new ValidacaoAssinaturaException("Assinatura do webhook inválida.");
         }
 
         if (payload.getAction() == null || !payload.getAction().equals("order.processed")) {
@@ -203,6 +210,16 @@ public class PixService {
             return hex.toString().equals(v1);
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
             return false;
+        }
+    }
+
+    private void validarComandaRestaurante(Comanda comanda, Usuario usuarioLogado) {
+        Restaurante restauranteVinculado = usuarioLogado.getRestauranteVinculado();
+        if (restauranteVinculado == null) {
+            throw new ValidacaoNegocioException("Usuario nao vinculado a nenhum restaurante.");
+        }
+        if (!restauranteVinculado.getId().equals(comanda.getMesa().getRestaurante().getId())) {
+            throw new EntidadeNaoEncontradaException("Comanda nao encontrada.");
         }
     }
 

@@ -4,5 +4,6 @@ public enum StatusComanda {
     ABERTA,
     FECHADA,
     AGUARDANDO_PIX,
-    PAGA
+    PAGA,
+    CANCELADA
 }

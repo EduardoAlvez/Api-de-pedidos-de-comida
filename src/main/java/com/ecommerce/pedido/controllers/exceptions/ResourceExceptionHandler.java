@@ -1,6 +1,7 @@
 package com.ecommerce.pedido.controllers.exceptions;
 
 import com.ecommerce.pedido.dtos.excpetions.ValidationError;
+import com.ecommerce.pedido.services.exceptions.AcessoRestauranteException;
 import com.ecommerce.pedido.services.exceptions.EmailCadastradoExcption;
 import com.ecommerce.pedido.services.exceptions.EntidadeNaoEncontradaException;
 import com.ecommerce.pedido.services.exceptions.ValidacaoAssinaturaException;
@@ -41,6 +42,19 @@ public class ResourceExceptionHandler {
                 Instant.now(),
                 status.value(),
                 "Erro na validação",
+                e.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(status).body(err);
+    }
+
+    @ExceptionHandler(AcessoRestauranteException.class)
+    public ResponseEntity<StandardError> acessoRestaurante(AcessoRestauranteException e, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.FORBIDDEN; // 403
+        StandardError err = new StandardError(
+                Instant.now(),
+                status.value(),
+                "Acesso negado",
                 e.getMessage(),
                 request.getRequestURI()
         );

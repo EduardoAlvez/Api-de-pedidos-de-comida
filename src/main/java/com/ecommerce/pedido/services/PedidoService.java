@@ -3,6 +3,7 @@ package com.ecommerce.pedido.services;
 import com.ecommerce.pedido.dtos.*;
 import com.ecommerce.pedido.models.*;
 import com.ecommerce.pedido.models.enums.OrigemPedido;
+import com.ecommerce.pedido.models.enums.Role;
 import com.ecommerce.pedido.models.enums.StatusPagamento;
 import com.ecommerce.pedido.models.enums.StatusPedido;
 import com.ecommerce.pedido.models.enums.TamanhoPorcao;
@@ -159,13 +160,21 @@ public class PedidoService {
     }
 
     @Transactional(readOnly = true)
-    public List<PedidoResponseDTO> listarPorUsuario(Long usuarioId) {
-        // Verificação
+    public List<PedidoResponseDTO> listarPorUsuario(Long usuarioId, Usuario usuarioLogado) {
         if (!usuarioRepository.existsById(usuarioId)) {
             throw new UsuarioNaoEncontradoException("Usuário não encontrado com o ID: " + usuarioId);
         }
 
-        List<Pedido> pedidos = pedidoRepository.findAllByUsuario_IdOrderByDataDoPedidoDesc(usuarioId);
+        List<Pedido> pedidos;
+        if (usuarioLogado.getTipo() != Role.CLIENTE) {
+            Restaurante restauranteVinculado = usuarioLogado.getRestauranteVinculado();
+            if (restauranteVinculado == null) {
+                throw new ValidacaoNegocioException("Usuario nao vinculado a nenhum restaurante.");
+            }
+            pedidos = pedidoRepository.findAllByRestaurante_IdOrderByDataDoPedidoDesc(restauranteVinculado.getId());
+        } else {
+            pedidos = pedidoRepository.findAllByUsuario_IdOrderByDataDoPedidoDesc(usuarioId);
+        }
         return pedidos.stream()
                 .map(this::toResponseDTO)
                 .collect(Collectors.toList());
