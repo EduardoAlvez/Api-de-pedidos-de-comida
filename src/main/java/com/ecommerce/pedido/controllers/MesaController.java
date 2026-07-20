@@ -66,6 +66,13 @@ public class MesaController {
         return ResponseEntity.ok(mesaService.atualizar(id, requestDTO, usuarioLogado));
     }
 
+    @Operation(summary = "Encerrar mesa", description = "Cancela comandas abertas e libera a mesa (cliente desistiu)")
+    @PostMapping("/{id}/encerrar")
+    public ResponseEntity<MesaResponseDTO> encerrarMesa(@PathVariable Long id) {
+        Usuario usuarioLogado = SecurityUtils.getUsuarioLogado();
+        return ResponseEntity.ok(mesaService.encerrar(id, usuarioLogado));
+    }
+
     @Operation(summary = "Deletar mesa", description = "Remove uma mesa")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deletarMesa(@PathVariable Long id) {

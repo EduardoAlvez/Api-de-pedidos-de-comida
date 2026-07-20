@@ -74,7 +74,7 @@ public class DataLoader implements CommandLineRunner {
                 "12.345.678/0001-90",
                 "Comida Brasileira",
                 "08:00-22:00",
-                "https://exemplo.com/restaurante1.jpg",
+                "/uploads/restaurantes/1.jpg",
                 dono1
         );
 
@@ -85,7 +85,7 @@ public class DataLoader implements CommandLineRunner {
                 "98.765.432/0001-10",
                 "Pizza",
                 "18:00-23:00",
-                "https://exemplo.com/restaurante2.jpg",
+                "/uploads/restaurantes/2.jpg",
                 dono2
         );
 
@@ -107,7 +107,7 @@ public class DataLoader implements CommandLineRunner {
                 "Feijoada tradicional com todas as accompanhamentos",
                 new BigDecimal("35.90"),
                 "Pratos Principais",
-                "https://exemplo.com/feijoada.jpg",
+                "/uploads/produtos/1.jpg",
                 restaurante1
         );
 
@@ -116,7 +116,7 @@ public class DataLoader implements CommandLineRunner {
                 "Pizza tradicional com molho de tomate, mussarela e manjericão",
                 new BigDecimal("48.50"),
                 "Pizzas",
-                "https://exemplo.com/pizza.jpg",
+                "/uploads/produtos/2.jpg",
                 restaurante2
         );
 
@@ -125,11 +125,76 @@ public class DataLoader implements CommandLineRunner {
                 "Refrigerante diversos sabores",
                 new BigDecimal("12.00"),
                 "Bebidas",
-                "https://exemplo.com/refri.jpg",
+                "/uploads/produtos/3.jpg",
                 restaurante1
         );
         refrigerante.setPrecoMeia(new BigDecimal("7.00"));
         produtoRepository.save(refrigerante);
+
+        // Mais produtos para o cardápio
+        Produto agua = criarProduto(
+                "Água Mineral",
+                "Água mineral sem gás 500ml",
+                new BigDecimal("1.00"),
+                "Bebidas",
+                "/uploads/produtos/4.jpg",
+                restaurante1
+        );
+
+        Produto suco = criarProduto(
+                "Suco Natural",
+                "Suco de laranja natural 400ml",
+                new BigDecimal("8.50"),
+                "Bebidas",
+                "/uploads/produtos/5.jpg",
+                restaurante1
+        );
+
+        Produto pratoFeito = criarProduto(
+                "Prato Feito",
+                "Arroz, feijão, bife acebolado, farofa e salada",
+                new BigDecimal("22.90"),
+                "Pratos Principais",
+                "/uploads/produtos/6.jpg",
+                restaurante1
+        );
+
+        Produto sobremesa = criarProduto(
+                "Pudim",
+                "Pudim de leite condensado caseiro",
+                new BigDecimal("14.90"),
+                "Sobremesas",
+                "/uploads/produtos/7.jpg",
+                restaurante1
+        );
+
+        // Produtos adicionais restaurante2 (Pizza Italiana)
+        Produto pizzaCalabresa = criarProduto(
+                "Pizza Calabresa",
+                "Pizza de calabresa com cebola e azeitona",
+                new BigDecimal("45.00"),
+                "Pizzas",
+                "/uploads/produtos/8.jpg",
+                restaurante2
+        );
+
+        Produto pizzaDoce = criarProduto(
+                "Pizza Doce de Chocolate",
+                "Pizza com chocolate ao leite e morango",
+                new BigDecimal("52.00"),
+                "Pizzas",
+                "/uploads/produtos/9.jpg",
+                restaurante2
+        );
+
+        Produto refrigerante2 = criarProduto(
+                "Refrigerante Lata",
+                "Refrigerante lata 350ml",
+                new BigDecimal("5.00"),
+                "Bebidas",
+                "/uploads/produtos/10.jpg",
+                restaurante2
+        );
 
         // 5. CRIAR PEDIDO
         Pedido pedido = criarPedido(
@@ -182,6 +247,34 @@ public class DataLoader implements CommandLineRunner {
         refriCompartilhado.setPrecoUnitario(refrigerante.getPreco());
         refriCompartilhado.setObservacao("Ratear entre todos");
         itemCompartilhadoRepository.save(refriCompartilhado);
+
+        // 8b. SEGUNDA MESA - Teste com 3 acompanhantes
+        Mesa mesa2 = criarMesa("Teste", restaurante1);
+        criarComanda("Teste", mesa2, garcom1, List.of(
+                criarItemComanda(2, pratoFeito),
+                criarItemComanda(1, suco),
+                criarItemComanda(1, sobremesa)
+        ));
+        criarComanda("Ana", mesa2, garcom1, List.of(
+                criarItemComanda(1, feijoada),
+                criarItemComanda(2, agua)
+        ));
+        criarComanda("Carlos", mesa2, garcom1, List.of(
+                criarItemComanda(2, refrigerante),
+                criarItemComanda(1, sobremesa)
+        ));
+        criarComanda("Beatriz", mesa2, garcom1, List.of(
+                criarItemComanda(1, pratoFeito),
+                criarItemComanda(1, suco)
+        ));
+
+        ItemCompartilhado petiscoCompartilhado = new ItemCompartilhado();
+        petiscoCompartilhado.setMesa(mesa2);
+        petiscoCompartilhado.setProduto(refrigerante);
+        petiscoCompartilhado.setQuantidade(2);
+        petiscoCompartilhado.setPrecoUnitario(refrigerante.getPreco());
+        petiscoCompartilhado.setObservacao("Compartilhado");
+        itemCompartilhadoRepository.save(petiscoCompartilhado);
 
         // 9. CRIAR TRANSAÇÃO PIX DE EXEMPLO (se não existir)
         List<Comanda> comandas = comandaRepository.findAllByMesa_IdOrderByDataAberturaDesc(mesa1.getId());

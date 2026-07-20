@@ -30,7 +30,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/api_pedidos
       SPRING_DATASOURCE_USERNAME: usuario
       SPRING_DATASOURCE_PASSWORD: senha
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
       API_SECURITY_TOKEN_SECRET: minha-chave-super-secreta-docker-2025
       MP_ACCESS_TOKEN: test-mp-access-token-placeholder
       MP_WEBHOOK_SECRET: test-mp-webhook-secret-placeholder

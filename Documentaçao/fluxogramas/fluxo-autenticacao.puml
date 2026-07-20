@@ -9,7 +9,7 @@ start
 :Busca usuário por email\nno UserDetailsServiceImpl;
 
 if (Usuário encontrado\ne senha válida?) then (sim)
-  :Gera token JWT\n(7 dias, assinado HMAC);
+  :Gera token JWT\n(2 horas, assinado HMAC);
   :Retorna 200 OK\n{ token, type: "Bearer" };
 else (não)
   :401 Unauthorized;
@@ -23,7 +23,7 @@ endif
 |Sistema (SecurityFilter)|
 :Extrai token do header;
 if (Token ausente?) then (sim)
-  if (Rota pública?\n/login, /webhook,\n/produtos, /h2-console) then (sim)
+  if (Rota pública?\n/login, /usuarios,\n/pix/webhook,\n/h2-console, /swagger) then (sim)
     :Permite acesso\n(segue fluxo normal);
   else (não)
     :401 Unauthorized;

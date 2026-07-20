@@ -1,0 +1,110 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #F5F5F5
+  BorderColor #333333
+  ArrowColor #333333
+}
+skinparam actor {
+  BorderColor #333333
+}
+
+title Diagrama de Casos de Uso — Comanda Digital (Backend Presencial)
+
+actor "Visitante" as V
+actor "CLIENTE" as C
+actor "GARCOM" as G
+actor "DONO_RESTAURANTE" as D
+actor "Mercado Pago" as MP
+
+rectangle "Comanda Digital" {
+
+  package "Autenticação" {
+    usecase "CU-01: Cadastrar Usuário" as UC01
+    usecase "CU-02: Login" as UC02
+  }
+
+  package "Garçons" {
+    usecase "CU-03: Criar Garçom" as UC03
+    usecase "Vincular Garçom" as UC03b
+    usecase "Desvincular Garçom" as UC03c
+    usecase "Listar Garçons" as UC03d
+  }
+
+  package "Mesas" {
+    usecase "CU-04: Abrir Mesa" as UC04
+    usecase "Listar Mesas" as UC04b
+    usecase "CU-10: Encerrar Mesa" as UC10
+    usecase "Deletar Mesa" as UC10b
+  }
+
+  package "Comandas" {
+    usecase "CU-05: Criar Comanda" as UC05
+    usecase "CU-06: Adicionar Item" as UC06
+    usecase "Atualizar Item" as UC06b
+    usecase "Remover Item" as UC06c
+    usecase "Listar Comandas" as UC05b
+  }
+
+  package "Rateio" {
+    usecase "CU-07: Ratear Item" as UC07
+  }
+
+  package "Pagamento" {
+    usecase "CU-08: Fechar Comanda\n(Presencial)" as UC08
+    usecase "CU-09: Gerar QR Code PIX" as UC09
+    usecase "Consultar Status PIX" as UC09b
+  }
+}
+
+' === Visitante ===
+V --> UC01
+V --> UC02
+
+' === CLIENTE ===
+C --> UC02
+
+' === GARCOM ===
+G --> UC02
+G --> UC04
+G --> UC04b
+G --> UC05
+G --> UC05b
+G --> UC06
+G --> UC06b
+G --> UC06c
+G --> UC07
+G --> UC08
+G --> UC09
+G --> UC09b
+
+' === DONO_RESTAURANTE ===
+D --> UC02
+D --> UC03
+D --> UC03b
+D --> UC03c
+D --> UC03d
+D --> UC04
+D --> UC04b
+D --> UC05
+D --> UC05b
+D --> UC06
+D --> UC06b
+D --> UC06c
+D --> UC07
+D --> UC08
+D --> UC09
+D --> UC09b
+D --> UC10
+D --> UC10b
+
+' === Mercado Pago ===
+UC09 ..> MP : <<include>>
+
+' === Relacionamentos ===
+UC08 ..> UC09 : <<extends>>
+UC10 ..> UC05 : <<include>>
+
+@enduml

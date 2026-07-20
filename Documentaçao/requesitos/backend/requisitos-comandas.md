@@ -100,4 +100,6 @@
 ## RF018: Máquina de Estados da Comanda
 - `ABERTA` → (fechar presencial) → `PAGA`
 - `ABERTA` → (gerar QR Code Pix) → `AGUARDANDO_PIX` → (webhook confirma) → `PAGA`
+- `ABERTA` ou `AGUARDANDO_PIX` → (encerrar mesa) → `CANCELADA`
 - Uma comanda `AGUARDANDO_PIX` pode ter o QR Code **regenerado** se a transação anterior expirar
+- Comandas `CANCELADA` preservam dados históricos (não são removidas)

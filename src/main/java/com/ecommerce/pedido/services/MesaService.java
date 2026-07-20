@@ -6,6 +6,7 @@ import com.ecommerce.pedido.dtos.MesaResponseDTO;
 import com.ecommerce.pedido.models.Mesa;
 import com.ecommerce.pedido.models.Restaurante;
 import com.ecommerce.pedido.models.Usuario;
+import com.ecommerce.pedido.models.Comanda;
 import com.ecommerce.pedido.models.enums.StatusMesa;
 import com.ecommerce.pedido.models.enums.StatusComanda;
 import com.ecommerce.pedido.repositories.ComandaRepository;
@@ -84,6 +85,24 @@ public class MesaService {
                 .orElseThrow(() -> new RestauranteNaoEncontradoException("Mesa não encontrada com o ID: " + id));
         validarAcessoRestaurante(mesa.getRestaurante().getId(), usuarioLogado);
         mesa.setNomeCliente(requestDTO.getNomeCliente());
+        return toResponseDTO(mesaRepository.save(mesa));
+    }
+
+    @Transactional
+    public MesaResponseDTO encerrar(Long id, Usuario usuarioLogado) {
+        Mesa mesa = mesaRepository.findById(id)
+                .orElseThrow(() -> new RestauranteNaoEncontradoException("Mesa não encontrada com o ID: " + id));
+        validarAcessoRestaurante(mesa.getRestaurante().getId(), usuarioLogado);
+
+        List<Comanda> comandas = comandaRepository.findAllByMesa_IdOrderByDataAberturaDesc(id);
+        for (Comanda c : comandas) {
+            if (c.getStatus() == StatusComanda.ABERTA || c.getStatus() == StatusComanda.AGUARDANDO_PIX) {
+                c.setStatus(StatusComanda.CANCELADA);
+                comandaRepository.save(c);
+            }
+        }
+
+        mesa.setStatus(StatusMesa.LIVRE);
         return toResponseDTO(mesaRepository.save(mesa));
     }
 

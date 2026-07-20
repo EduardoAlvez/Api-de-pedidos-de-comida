@@ -4,11 +4,14 @@ import com.ecommerce.pedido.configs.SecurityUtils;
 import com.ecommerce.pedido.dtos.ProdutoRequestDTO;
 import com.ecommerce.pedido.dtos.ProdutoResponseDTO;
 import com.ecommerce.pedido.models.Usuario;
+import com.ecommerce.pedido.services.FileStorageService;
 import com.ecommerce.pedido.services.ProdutoService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -17,9 +20,11 @@ import java.util.List;
 public class ProdutoController {
 
     private final ProdutoService produtoService;
+    private final FileStorageService fileStorageService;
 
-    public ProdutoController(ProdutoService produtoService){
+    public ProdutoController(ProdutoService produtoService, FileStorageService fileStorageService){
         this.produtoService = produtoService;
+        this.fileStorageService = fileStorageService;
     }
 
     @PostMapping
@@ -44,6 +49,14 @@ public class ProdutoController {
     public ResponseEntity<?> deletarProduto(@PathVariable Long id) {
         produtoService.deletar(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping(value = "/{id}/imagem", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ProdutoResponseDTO> uploadImagem(
+            @PathVariable Long id,
+            @RequestParam("imagem") MultipartFile imagem) {
+        ProdutoResponseDTO response = produtoService.atualizarImagem(id, imagem);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/restaurante/{restauranteId}")

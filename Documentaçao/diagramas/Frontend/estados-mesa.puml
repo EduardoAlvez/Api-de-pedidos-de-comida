@@ -1,0 +1,19 @@
+@startuml
+' Estados da Mesa — Frontend
+' Atualizado: remover estado FECHADA (não existe no backend)
+
+state "LIVRE" as LIVRE
+state "OCUPADA" as OCUPADA
+
+[*] --> LIVRE : inicial
+LIVRE --> OCUPADA : Abrir Mesa\n(POST /API/V1/mesas)
+OCUPADA --> LIVRE : Encerrar Mesa\n(POST /API/V1/mesas/{id}/encerrar)\nou Deletar Mesa\n(DELETE /API/V1/mesas/{id})
+
+note right of OCUPADA : Garçom pode lançar,\neditar e excluir itens\ne criar comandas
+
+note right of LIVRE
+  Mesa disponível para
+  novos atendimentos
+end note
+
+@enduml

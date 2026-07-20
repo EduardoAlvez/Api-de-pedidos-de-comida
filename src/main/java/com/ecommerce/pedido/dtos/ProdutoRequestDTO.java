@@ -33,6 +33,8 @@ public class ProdutoRequestDTO {
     // Por padrão, disponível
     private boolean disponivel = true;
 
+    private String imageUrl;
+
     @NotNull(message = "O ID do restaurante é obrigatório.")
     private Long restauranteId;
 }

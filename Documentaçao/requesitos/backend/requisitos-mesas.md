@@ -52,6 +52,8 @@
 - **Validações:**
   - Mesa deve existir
   - Mesa deve pertencer ao restaurante do usuário logado
+  - Mesa **não pode** ter comandas com status `ABERTA` ou `AGUARDANDO_PIX`
+  - Se houver comandas abertas → `400 Bad Request` "Existe(m) comanda(s) aberta(s) nesta mesa. Feche ou cancele antes de remover."
 
 ## RF006: Adicionar Item Compartilhado à Mesa
 - **Endpoint:** `POST /API/V1/mesas/{mesaId}/compartilhados`
@@ -82,3 +84,13 @@
 - Um garçom/dono **só enxerga e opera** mesas do próprio restaurante
 - Tentativa de acessar mesa de outro restaurante retorna `404 Not Found`
 - A listagem de mesas já filtra automaticamente pelo restaurante do usuário logado
+
+## RF010: Encerrar Mesa
+- **Endpoint:** `POST /API/V1/mesas/{id}/encerrar`
+- **Autenticação:** JWT (role DONO_RESTAURANTE)
+- **Resposta:** `200 OK` com `MesaResponseDTO` (status agora `LIVRE`)
+- **Regras de negócio:**
+  - Comandas com status `ABERTA` ou `AGUARDANDO_PIX` são transicionadas para `CANCELADA`
+  - A mesa volta para status `LIVRE`
+  - Dados históricos (comandas `FECHADA`, `PAGA`, `CANCELADA`) são **preservados**
+  - Apenas o dono do restaurante pode encerrar mesas

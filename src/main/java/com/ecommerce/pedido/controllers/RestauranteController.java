@@ -1,16 +1,19 @@
 package com.ecommerce.pedido.controllers;
 
+import com.ecommerce.pedido.configs.SecurityUtils;
 import com.ecommerce.pedido.dtos.RestauranteRequestDTO;
 import com.ecommerce.pedido.dtos.RestauranteResponseDTO;
 import com.ecommerce.pedido.models.Usuario;
 import com.ecommerce.pedido.models.enums.Role;
+import com.ecommerce.pedido.services.FileStorageService;
 import com.ecommerce.pedido.services.RestauranteService;
 import com.ecommerce.pedido.services.exceptions.ValidacaoNegocioException;
-import com.ecommerce.pedido.configs.SecurityUtils;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -19,9 +22,11 @@ import java.util.List;
 public class RestauranteController {
 
     private final RestauranteService restauranteService;
+    private final FileStorageService fileStorageService;
 
-    public RestauranteController(RestauranteService restauranteService) {
+    public RestauranteController(RestauranteService restauranteService, FileStorageService fileStorageService) {
         this.restauranteService = restauranteService;
+        this.fileStorageService = fileStorageService;
     }
 
     /**
@@ -79,6 +84,15 @@ public class RestauranteController {
         validarDonoRestaurante();
         restauranteService.deletar(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping(value = "/{id}/imagem", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<RestauranteResponseDTO> uploadImagem(
+            @PathVariable Long id,
+            @RequestParam("imagem") MultipartFile imagem) {
+        validarDonoRestaurante();
+        RestauranteResponseDTO response = restauranteService.atualizarImagem(id, imagem);
+        return ResponseEntity.ok(response);
     }
 
     private void validarDonoRestaurante() {

@@ -31,7 +31,7 @@ endif
 :MP envia notificação;
 
 |Sistema|
-:POST /webhook/mercadopago;
+:POST /API/V1/pix/webhook;
 :Valida assinatura x-signature;
 
 if (Assinatura inválida?) then (sim)

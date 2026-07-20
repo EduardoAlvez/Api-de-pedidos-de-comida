@@ -1,11 +1,13 @@
 package com.ecommerce.pedido.controllers;
 
 import com.ecommerce.pedido.configs.SecurityUtils;
+import com.ecommerce.pedido.dtos.GarcomRequestDTO;
 import com.ecommerce.pedido.dtos.UsuarioResponseDTO;
 import com.ecommerce.pedido.models.Usuario;
 import com.ecommerce.pedido.models.enums.Role;
 import com.ecommerce.pedido.services.VinculoGarcomService;
 import com.ecommerce.pedido.services.exceptions.AcessoRestauranteException;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +26,28 @@ public class GarcomController {
         this.vinculoGarcomService = vinculoGarcomService;
     }
 
+    /**
+     * Criar um novo garçom e vinculá-lo ao restaurante em um único passo.
+     * Body: { "nome": "...", "email": "...", "senha": "...", "telefone": "..." }
+     * Retorna 201 Created com os dados do garçom criado (incluindo ID e tipo GARCOM).
+     */
     @PostMapping
+    public ResponseEntity<UsuarioResponseDTO> criarGarcom(
+            @PathVariable Long restauranteId,
+            @Valid @RequestBody GarcomRequestDTO requestDTO) {
+        Usuario donoLogado = SecurityUtils.getUsuarioLogado();
+        if (donoLogado == null || donoLogado.getTipo() != Role.DONO_RESTAURANTE) {
+            throw new AcessoRestauranteException("Apenas donos de restaurante podem criar garcons.");
+        }
+        UsuarioResponseDTO response = vinculoGarcomService.criarGarcom(requestDTO, restauranteId, donoLogado);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * Vincular um usuário GARCOM existente ao restaurante.
+     * Body: { "usuarioId": 5 }
+     */
+    @PostMapping("/vincular")
     public ResponseEntity<Void> vincularGarcom(
             @PathVariable Long restauranteId,
             @RequestBody Map<String, Long> body) {

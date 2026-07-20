@@ -32,4 +32,6 @@ public class RestauranteRequestDTO {
     // ID do usuário que será o dono deste restaurante.
     @NotNull(message = "O ID do usuário dono é obrigatório.")
     private Long usuarioId;
+
+    private String imageUrl;
 }

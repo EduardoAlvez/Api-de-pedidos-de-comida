@@ -3,8 +3,10 @@ package com.ecommerce.pedido.services;
 import com.ecommerce.pedido.dtos.UsuarioRequestDTO;
 import com.ecommerce.pedido.dtos.UsuarioResponseDTO;
 import com.ecommerce.pedido.models.Usuario;
+import com.ecommerce.pedido.models.enums.Role;
 import com.ecommerce.pedido.repositories.UsuarioRepository;
 import com.ecommerce.pedido.services.exceptions.EmailCadastradoExcption;
+import com.ecommerce.pedido.services.exceptions.ValidacaoNegocioException;
 import com.ecommerce.pedido.services.exceptions.UsuarioNaoEncontradoException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -35,6 +37,7 @@ public class UsuarioService {
         Usuario novoUsuario = new Usuario();
         BeanUtils.copyProperties(requestDTO, novoUsuario, "id", "senha");
 
+        novoUsuario.setTipo(Role.CLIENTE);
         novoUsuario.setSenha(passwordEncoder.encode(requestDTO.getSenha()));
         Usuario usuarioSalvo = usuarioRepository.save(novoUsuario);
 
@@ -48,17 +51,13 @@ public class UsuarioService {
         return toResponseDTO(usuario);
     }
 
-    @Transactional(readOnly = true)
-    public List<UsuarioResponseDTO> listarTodos() {
-        List<Usuario> usuarios = usuarioRepository.findAll();
-        return usuarios.stream()
-                .map(this::toResponseDTO)
-                .collect(Collectors.toList());
-    }
-
 
     @Transactional
-    public UsuarioResponseDTO atualizar(Long id, UsuarioRequestDTO requestDTO) {
+    public UsuarioResponseDTO atualizar(Long id, UsuarioRequestDTO requestDTO, Usuario usuarioLogado) {
+        if (!usuarioLogado.getId().equals(id)) {
+            throw new ValidacaoNegocioException("Você só pode alterar sua própria conta.");
+        }
+
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new UsuarioNaoEncontradoException("Usuário não encontrado com o id: " + id));
 
@@ -69,7 +68,7 @@ public class UsuarioService {
             throw new EmailCadastradoExcption("O novo e-mail já está em uso por outro usuário.");
         }
 
-        BeanUtils.copyProperties(requestDTO, usuario, "id", "senha");
+        BeanUtils.copyProperties(requestDTO, usuario, "id", "senha", "tipo");
 
         if (requestDTO.getSenha() != null && !requestDTO.getSenha().isBlank()) {
             usuario.setSenha(passwordEncoder.encode(requestDTO.getSenha()));
@@ -80,8 +79,11 @@ public class UsuarioService {
 
 
     @Transactional
-    public void deletar(Long id) {
-        // 1. Verifica se o usuário existe antes de tentar deletar.
+    public void deletar(Long id, Usuario usuarioLogado) {
+        if (!usuarioLogado.getId().equals(id)) {
+            throw new ValidacaoNegocioException("Você só pode deletar sua própria conta.");
+        }
+
         if (!usuarioRepository.existsById(id)) {
             throw new UsuarioNaoEncontradoException("Usuário não encontrado com o id: " + id);
         }

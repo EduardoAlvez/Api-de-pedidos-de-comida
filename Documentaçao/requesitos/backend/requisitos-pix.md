@@ -24,7 +24,7 @@
 - A chamada à API do MP leva o token como parâmetro
 
 ## RF021: Webhook de Confirmação
-- **Endpoint:** `POST /API/V1/webhook/mercadopago`
+- **Endpoint:** `POST /API/V1/pix/webhook`
 - **Autenticação:** Nenhuma (público, validado por assinatura HMAC)
 - **Body:** Payload do Mercado Pago com `txId` e status
 - **Resposta:** `200 OK` (processado) | `401` (assinatura inválida) | `404` (txId não encontrado)

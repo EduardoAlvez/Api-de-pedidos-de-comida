@@ -15,6 +15,7 @@ import com.ecommerce.pedido.services.exceptions.ValidacaoNegocioException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,10 +25,13 @@ public class ProdutoService {
 
     private final ProdutoRepository produtoRepository;
     private final RestauranteRepository restauranteRepository;
+    private final FileStorageService fileStorageService;
 
-    public ProdutoService(ProdutoRepository produtoRepository, RestauranteRepository restauranteRepository) {
+    public ProdutoService(ProdutoRepository produtoRepository, RestauranteRepository restauranteRepository,
+                          FileStorageService fileStorageService) {
         this.produtoRepository = produtoRepository;
         this.restauranteRepository = restauranteRepository;
+        this.fileStorageService = fileStorageService;
     }
 
     @Transactional
@@ -84,6 +88,17 @@ public class ProdutoService {
         return toResponseDTO(produtoRepository.save(produto));
     }
 
+
+    @Transactional
+    public ProdutoResponseDTO atualizarImagem(Long id, MultipartFile imagem) {
+        Produto produto = produtoRepository.findById(id)
+                .orElseThrow(() -> new ProdutoNaoEncontradoException("Produto não encontrado com o ID: " + id));
+
+        fileStorageService.deletarImagem(produto.getImageUrl());
+        String path = fileStorageService.salvarImagem(id, "produtos", imagem);
+        produto.setImageUrl(path);
+        return toResponseDTO(produtoRepository.save(produto));
+    }
 
     @Transactional
     public void deletar(Long id) {

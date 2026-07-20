@@ -61,7 +61,7 @@
 | ID | Elemento UML | Artefato no Código | Correspondência |
 |----|--------------|---------------------|----------------|
 | BE1 | `StatusMesa` (LIVRE, OCUPADA) | `models/enums/StatusMesa.java` | Direta |
-| BE2 | `StatusComanda` (ABERTA, FECHADA, AGUARDANDO_PIX, PAGA) | `models/enums/StatusComanda.java` | Direta |
+| BE2 | `StatusComanda` (ABERTA, FECHADA, AGUARDANDO_PIX, PAGA, CANCELADA) | `models/enums/StatusComanda.java` | Direta |
 | BE3 | `Role` (CLIENTE, GARCOM, DONO_RESTAURANTE) | `models/enums/Role.java` | Direta |
 | BE4 | `StatusPedido` (PENDENTE, CONFIRMADO, EM_PREPARACAO, SAIU_PARA_ENTREGA, ENTREGUE, CANCELADO) | `models/enums/StatusPedido.java` | Direta |
 | BE5 | `FormaPagamento` (PIX, CARTAO_CREDITO, CARTAO_DEBITO, DINHEIRO) | `models/enums/FormaPagamento.java` | Direta |
@@ -84,49 +84,50 @@
 | C03 | listarMesas() | `MesaController.java:48` | GET /API/V1/mesas | Direta |
 | C04 | buscarMesaPorId() | `MesaController.java:55` | GET /API/V1/mesas/{id} | Direta |
 | C05 | atualizarMesa() | `MesaController.java:62` | PUT /API/V1/mesas/{id} | Direta |
-| C06 | deletarMesa() | `MesaController.java:71` | DELETE /API/V1/mesas/{id} | Direta |
-| C07 | adicionarItemCompartilhado() | `MesaController.java:83` | POST /API/V1/mesas/{mesaId}/compartilhados | Direta |
-| C08 | listarItensCompartilhados() | `MesaController.java:93` | GET /API/V1/mesas/{mesaId}/compartilhados | Direta |
-| C09 | atualizarItemCompartilhado() | `MesaController.java:101` | PUT /API/V1/mesas/{mesaId}/compartilhados/{itemId} | Direta |
-| C10 | removerItemCompartilhado() | `MesaController.java:111` | DELETE /API/V1/mesas/{mesaId}/compartilhados/{itemId} | Direta |
-| C11 | criarComanda() | `ComandaController.java:33` | POST /API/V1/mesas/{mesaId}/comandas | Direta |
-| C12 | listarComandas() | `ComandaController.java:43` | GET /API/V1/comandas?mesaId= | Direta |
-| C13 | buscarComanda() | `ComandaController.java:50` | GET /API/V1/comandas/{id} | Direta |
-| C14 | adicionarItem() | `ComandaController.java:61` | POST /API/V1/comandas/{id}/itens | Direta |
-| C15 | atualizarItem() | `ComandaController.java:71` | PUT /API/V1/comandas/{comandaId}/itens/{itemId} | Direta |
-| C16 | removerItem() | `ComandaController.java:81` | DELETE /API/V1/comandas/{comandaId}/itens/{itemId} | Direta |
-| C17 | rateio() | `ComandaController.java:95` | POST /API/V1/comandas/{id}/rateio | Direta |
-| C18 | fecharComanda() | `ComandaController.java:104` | POST /API/V1/comandas/{id}/fechar | Direta |
-| C19 | gerarQrCode() | `PixController.java:25` | POST /API/V1/comandas/{id}/pix | Direta |
-| C20 | consultarStatus() | `PixController.java:31` | GET /API/V1/comandas/{id}/pix | Direta |
-| C21 | receberWebhook() | `PixController.java:42` | POST /API/V1/pix/webhook | Direta |
-| C22 | criarPedido() | `PedidoController.java:27` | POST /API/V1/pedidos | Direta |
-| C23 | buscarPedidoPorId() | `PedidoController.java:33` | GET /API/V1/pedidos/{id} | Direta |
-| C24 | listarPedidosPorUsuario() | `PedidoController.java:39` | GET /API/V1/pedidos/usuario/{usuarioId} | Direta |
-| C25 | atualizarStatusPedido() | `PedidoController.java:46` | PUT /API/V1/pedidos/{id}/status | Direta |
-| C26 | criarProduto() | `ProdutoController.java:26` | POST /API/V1/produtos | Direta |
-| C27 | buscarProdutoPorId() | `ProdutoController.java:32` | GET /API/V1/produtos/{id} | Direta |
-| C28 | atualizarProduto() | `ProdutoController.java:38` | PUT /API/V1/produtos/{id} | Direta |
-| C29 | deletarProduto() | `ProdutoController.java:44` | DELETE /API/V1/produtos/{id} | Direta |
-| C30 | listarProdutosPorRestaurante() | `ProdutoController.java:49` | GET /API/V1/produtos/restaurante/{restauranteId} | Direta |
-| C31 | criarRestaurante() | `RestauranteController.java:28` | POST /API/V1/restaurantes | Direta |
-| C32 | listarTodosRestaurantes() | `RestauranteController.java:39` | GET /API/V1/restaurantes | Direta |
-| C33 | buscarRestaurantePorId() | `RestauranteController.java:50` | GET /API/V1/restaurantes/{id} | Direta |
-| C34 | atualizarRestaurante() | `RestauranteController.java:61` | PUT /API/V1/restaurantes/{id} | Direta |
-| C35 | deletarRestaurante() | `RestauranteController.java:74` | DELETE /API/V1/restaurantes/{id} | Direta |
-| C36 | criarUsuario() | `UsuarioController.java:28` | POST /API/V1/usuarios | Direta |
-| C37 | buscarUsuarioPorId() | `UsuarioController.java:39` | GET /API/V1/usuarios/{id} | Direta |
-| C38 | listarTodosUsuarios() | `UsuarioController.java:49` | GET /API/V1/usuarios | Direta |
-| C39 | atualizarUsuario() | `UsuarioController.java:59` | PUT /API/V1/usuarios/{id} | Direta |
-| C40 | deletarUsuario() | `UsuarioController.java:72` | DELETE /API/V1/usuarios/{id} | Direta |
-| C41 | vincularGarcom() | `GarcomController.java:28` | POST /API/V1/restaurantes/{id}/garcons | Direta |
-| C42 | desvincularGarcom() | `GarcomController.java:40` | DELETE /API/V1/restaurantes/{id}/garcons/{usuarioId} | Direta |
-| C43 | listarGarcons() | `GarcomController.java:52` | GET /API/V1/restaurantes/{id}/garcons | Direta |
-| C44 | listarRegioes() | `RegiaoEntregaController.java:26` | GET /API/V1/restaurantes/{id}/regioes | Direta |
-| C45 | buscarRegiaoPorId() | `RegiaoEntregaController.java:32` | GET /API/V1/restaurantes/{id}/regioes/{id} | Direta |
-| C46 | criarRegiao() | `RegiaoEntregaController.java:38` | POST /API/V1/restaurantes/{id}/regioes | Direta |
-| C47 | atualizarRegiao() | `RegiaoEntregaController.java:46` | PUT /API/V1/restaurantes/{id}/regioes/{id} | Direta |
-| C48 | deletarRegiao() | `RegiaoEntregaController.java:54` | DELETE /API/V1/restaurantes/{id}/regioes/{id} | Direta |
+| C06 | deletarMesa() | `MesaController.java:78` | DELETE /API/V1/mesas/{id} | Direta |
+| C07 | encerrarMesa() | `MesaController.java:71` | POST /API/V1/mesas/{id}/encerrar | Direta |
+| C08 | adicionarItemCompartilhado() | `MesaController.java:90` | POST /API/V1/mesas/{mesaId}/compartilhados | Direta |
+| C09 | listarItensCompartilhados() | `MesaController.java:100` | GET /API/V1/mesas/{mesaId}/compartilhados | Direta |
+| C10 | atualizarItemCompartilhado() | `MesaController.java:108` | PUT /API/V1/mesas/{mesaId}/compartilhados/{itemId} | Direta |
+| C11 | removerItemCompartilhado() | `MesaController.java:118` | DELETE /API/V1/mesas/{mesaId}/compartilhados/{itemId} | Direta |
+| C12 | criarComanda() | `ComandaController.java:33` | POST /API/V1/mesas/{mesaId}/comandas | Direta |
+| C13 | listarComandas() | `ComandaController.java:43` | GET /API/V1/comandas?mesaId= | Direta |
+| C14 | buscarComanda() | `ComandaController.java:50` | GET /API/V1/comandas/{id} | Direta |
+| C15 | adicionarItem() | `ComandaController.java:61` | POST /API/V1/comandas/{id}/itens | Direta |
+| C16 | atualizarItem() | `ComandaController.java:71` | PUT /API/V1/comandas/{comandaId}/itens/{itemId} | Direta |
+| C17 | removerItem() | `ComandaController.java:81` | DELETE /API/V1/comandas/{comandaId}/itens/{itemId} | Direta |
+| C18 | rateio() | `ComandaController.java:95` | POST /API/V1/comandas/{id}/rateio | Direta |
+| C19 | fecharComanda() | `ComandaController.java:104` | POST /API/V1/comandas/{id}/fechar | Direta |
+| C20 | gerarQrCode() | `PixController.java:25` | POST /API/V1/comandas/{id}/pix | Direta |
+| C21 | consultarStatus() | `PixController.java:31` | GET /API/V1/comandas/{id}/pix | Direta |
+| C22 | receberWebhook() | `PixController.java:42` | POST /API/V1/pix/webhook | Direta |
+| C23 | criarPedido() | `PedidoController.java:27` | POST /API/V1/pedidos | Direta |
+| C24 | buscarPedidoPorId() | `PedidoController.java:33` | GET /API/V1/pedidos/{id} | Direta |
+| C25 | listarPedidosPorUsuario() | `PedidoController.java:39` | GET /API/V1/pedidos/usuario/{usuarioId} | Direta |
+| C26 | atualizarStatusPedido() | `PedidoController.java:46` | PUT /API/V1/pedidos/{id}/status | Direta |
+| C27 | criarProduto() | `ProdutoController.java:26` | POST /API/V1/produtos | Direta |
+| C28 | buscarProdutoPorId() | `ProdutoController.java:32` | GET /API/V1/produtos/{id} | Direta |
+| C29 | atualizarProduto() | `ProdutoController.java:38` | PUT /API/V1/produtos/{id} | Direta |
+| C30 | deletarProduto() | `ProdutoController.java:44` | DELETE /API/V1/produtos/{id} | Direta |
+| C31 | listarProdutosPorRestaurante() | `ProdutoController.java:49` | GET /API/V1/produtos/restaurante/{restauranteId} | Direta |
+| C32 | criarRestaurante() | `RestauranteController.java:28` | POST /API/V1/restaurantes | Direta |
+| C33 | listarTodosRestaurantes() | `RestauranteController.java:39` | GET /API/V1/restaurantes | Direta |
+| C34 | buscarRestaurantePorId() | `RestauranteController.java:50` | GET /API/V1/restaurantes/{id} | Direta |
+| C35 | atualizarRestaurante() | `RestauranteController.java:61` | PUT /API/V1/restaurantes/{id} | Direta |
+| C36 | deletarRestaurante() | `RestauranteController.java:74` | DELETE /API/V1/restaurantes/{id} | Direta |
+| C37 | criarUsuario() | `UsuarioController.java:29` | POST /API/V1/usuarios | Direta |
+| C38 | buscarUsuarioPorId() | `UsuarioController.java:39` | GET /API/V1/usuarios/{id} | Direta |
+| C39 | atualizarUsuario() | `UsuarioController.java:52` | PUT /API/V1/usuarios/{id} | Direta |
+| C40 | deletarUsuario() | `UsuarioController.java:66` | DELETE /API/V1/usuarios/{id} | Direta |
+| C41 | criarGarcom() | `GarcomController.java:34` | POST /API/V1/restaurantes/{id}/garcons | Direta |
+| C42 | vincularGarcom() | `GarcomController.java:50` | POST /API/V1/restaurantes/{id}/garcons/vincular | Direta |
+| C43 | desvincularGarcom() | `GarcomController.java:62` | DELETE /API/V1/restaurantes/{id}/garcons/{usuarioId} | Direta |
+| C44 | listarGarcons() | `GarcomController.java:74` | GET /API/V1/restaurantes/{id}/garcons | Direta |
+| C45 | listarRegioes() | `RegiaoEntregaController.java:26` | GET /API/V1/restaurantes/{id}/regioes | Direta |
+| C46 | buscarRegiaoPorId() | `RegiaoEntregaController.java:32` | GET /API/V1/restaurantes/{id}/regioes/{id} | Direta |
+| C47 | criarRegiao() | `RegiaoEntregaController.java:38` | POST /API/V1/restaurantes/{id}/regioes | Direta |
+| C48 | atualizarRegiao() | `RegiaoEntregaController.java:46` | PUT /API/V1/restaurantes/{id}/regioes/{id} | Direta |
+| C49 | deletarRegiao() | `RegiaoEntregaController.java:54` | DELETE /API/V1/restaurantes/{id}/regioes/{id} | Direta |
 
 ---
 
@@ -145,8 +146,8 @@
 | S07 | PixClient (interface) | `services/PixClient.java` | interface criarCobranca | Direta |
 | S08 | ProdutoService | `services/ProdutoService.java` | criar, buscarPorId, atualizar, deletar, listarPorRestaurante | Direta |
 | S09 | RestauranteService | `services/RestauranteService.java` | criar, listarTodos, buscarPorId, atualizar, deletar | Direta |
-| S10 | UsuarioService | `services/UsuarioService.java` | criar (com validação email), buscarPorId, listarTodos, atualizar, deletar | Direta |
-| S11 | VinculoGarcomService | `services/VinculoGarcomService.java` | vincular, desvincular, listarGarcons | Direta |
+| S10 | UsuarioService | `services/UsuarioService.java` | criar (com validação email + role CLIENTE forçada), buscarPorId, atualizar (com autoidentificação), deletar (com autoidentificação) | Direta |
+| S11 | VinculoGarcomService | `services/VinculoGarcomService.java` | criarGarcom, vincular, desvincular, listarGarcons | Direta |
 | S12 | RegiaoEntregaService | `services/RegiaoEntregaService.java` | criar, listar, buscarPorId, atualizar, deletar | Direta |
 | S13 | TokenService | `services/token/TokenService.java` | gerarToken, validarToken | Direta |
 | S14 | UserDetailsServiceImpl | `services/impl/UserDetailsServiceImpl.java` | loadUserByUsername | Direta |
@@ -277,10 +278,10 @@
 | Classes (Entidades) | 13 | 13 | 0 | 0 | 0 | 100% |
 | DTOs | 12 | 12 | 0 | 0 | 0 | 100% |
 | Enums | 10 | 10 | 0 | 0 | 0 | 100% |
-| Controllers (Endpoints) | 48 | 48 | 0 | 0 | 0 | 100% |
+| Controllers (Endpoints) | 49 | 48 | 0 | 0 | 1 | 98,0% |
 | Services | 14 | 14 | 0 | 0 | 0 | 100% |
 | Repositories | 13 | 13 | 0 | 0 | 0 | 100% |
 | Fluxos de Sequência | 36 | 36 | 0 | 0 | 0 | 100% |
 | Máquina de Estados | 5 | 5 | 0 | 0 | 0 | 100% |
 | Configuração / Segurança | 5 | 5 | 0 | 0 | 0 | 100% |
-| **Total Geral** | **156** | **156** | **0** | **0** | **0** | **100%** |
+| **Total Geral** | **157** | **156** | **0** | **0** | **1** | **99,4%** |

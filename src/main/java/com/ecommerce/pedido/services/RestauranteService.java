@@ -11,9 +11,9 @@ import com.ecommerce.pedido.services.exceptions.RestauranteNaoEncontradoExceptio
 import com.ecommerce.pedido.services.exceptions.UsuarioNaoEncontradoException;
 import com.ecommerce.pedido.services.exceptions.UsuarioPossuiRestauranteException;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,10 +23,13 @@ public class RestauranteService {
 
     private final RestauranteRepository restauranteRepository;
     private final UsuarioRepository usuarioRepository;
+    private final FileStorageService fileStorageService;
 
-    public RestauranteService(RestauranteRepository restauranteRepository, UsuarioRepository usuarioRepository) {
+    public RestauranteService(RestauranteRepository restauranteRepository, UsuarioRepository usuarioRepository,
+                              FileStorageService fileStorageService) {
         this.restauranteRepository = restauranteRepository;
         this.usuarioRepository = usuarioRepository;
+        this.fileStorageService = fileStorageService;
     }
     @Transactional
     public RestauranteResponseDTO criar(RestauranteRequestDTO requestDTO) {
@@ -86,6 +89,17 @@ public class RestauranteService {
         return toResponseDTO(restauranteRepository.save(restaurante));
     }
 
+
+    @Transactional
+    public RestauranteResponseDTO atualizarImagem(Long id, MultipartFile imagem) {
+        Restaurante restaurante = restauranteRepository.findById(id)
+                .orElseThrow(() -> new RestauranteNaoEncontradoException("Restaurante não encontrado com o ID: " + id));
+
+        fileStorageService.deletarImagem(restaurante.getImageUrl());
+        String path = fileStorageService.salvarImagem(id, "restaurantes", imagem);
+        restaurante.setImageUrl(path);
+        return toResponseDTO(restauranteRepository.save(restaurante));
+    }
 
     @Transactional
     public void deletar(Long id) {

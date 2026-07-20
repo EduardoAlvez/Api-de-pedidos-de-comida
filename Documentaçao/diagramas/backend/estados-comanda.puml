@@ -1,0 +1,32 @@
+@startuml
+skinparam stateAttributeIconSize 0
+
+state "ABERTA" as ABERTA
+state "AGUARDANDO_PIX" as PIX
+state "PAGA" as PAGA
+state "CANCELADA" as CANCELADA
+
+[*] --> ABERTA : Garçom cria comanda\n(POST /mesas/{id}/comandas)
+
+ABERTA --> PAGA : Garçom fecha conta presencial\n(POST /comandas/{id}/fechar\ncom formaPagamento ≠ PIX)
+
+ABERTA --> PIX : Garçom gera QR Code PIX\n(POST /comandas/{id}/pix)
+
+PIX --> PAGA : Webhook Mercado Pago confirma\npagamento (POST /pix/webhook)
+
+ABERTA --> CANCELADA : Dono encerra mesa\n(POST /mesas/{id}/encerrar)
+
+PIX --> CANCELADA : Dono encerra mesa\n(POST /mesas/{id}/encerrar)
+
+note right of PAGA
+  Quando todas as comandas da mesa
+  estão PAGA ou CANCELADA,
+  a mesa volta para LIVRE
+end note
+
+note right of CANCELADA
+  Dados históricos preservados
+  (comanda não é removida)
+end note
+
+@enduml

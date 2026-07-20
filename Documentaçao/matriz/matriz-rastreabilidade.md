@@ -121,6 +121,18 @@
 
 ---
 
+## 6. Documentação de Requisitos (Novos Documentos)
+
+*Referências: `Documentaçao/historias-usuario/index.md`, `Documentaçao/casos-de-uso/index.md`*
+
+| ID | Documento | Conteúdo | RFs Cobertos | Status |
+|----|-----------|----------|--------------|--------|
+| DOC1 | Histórias de Usuário | 22 user stories em 6 épicos (Autenticação, Garçons, Mesas, Comandas, Rateio, Pagamento) | RF001–RF050 | Atualizado |
+| DOC2 | Casos de Uso Backend | 10 casos de uso detalhados (CU-01 a CU-10) com fluxos principais e alternativos | RF001–RF050 | Atualizado |
+| DOC3 | Diagrama de Casos de Uso | UML com 5 atores, 6 pacotes, relações `<<include>>` e `<<extends>>` | — | Gerado |
+
+---
+
 ## Resumo Quantitativo
 
 | Categoria | Total | Direta | Parcial | Indireta | Ausente | % Rastreado |
@@ -130,4 +142,5 @@
 | Atributos | 17 | 16 | 1 | 0 | 0 | 94,1% |
 | Mensagens Sequência | 18 | 17 | 1 | 0 | 0 | 94,4% |
 | Requisitos Não Funcionais | 10 | 4 | 1 | 0 | 5 | 40% |
-| **Total Geral** | **63** | **53** | **4** | **1** | **5** | **84,1%** |
+| Documentação de Requisitos | 3 | 3 | 0 | 0 | 0 | 100% |
+| **Total Geral** | **66** | **56** | **4** | **1** | **5** | **84,8%** |
