@@ -1,0 +1,29 @@
+app = "comanda-digital-api"
+primary_region = "gig"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 512
+
+[env]
+  SPRING_PROFILES_ACTIVE = "postgre"
+  SPRING_JPA_HIBERNATE_DDL_AUTO = "update"
+  SPRING_JPA_SHOW_SQL = "false"
+  MERCADO_PAGO_ACCESS_TOKEN = ""
+  MERCADO_PAGO_WEBHOOK_SECRET = ""
+  API_SECURITY_TOKEN_SECRET = ""
+
+[deploy]
+  release_command = ""
