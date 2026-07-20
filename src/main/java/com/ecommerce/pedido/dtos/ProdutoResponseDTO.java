@@ -16,6 +16,7 @@ public class ProdutoResponseDTO {
     private BigDecimal precoMeia;
     private String categoria;
     private boolean disponivel;
+    private String imageUrl;
 
     // Restaurante do produto pertence,
     private RestauranteSimpleDTO restaurante;
