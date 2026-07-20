@@ -1,0 +1,36 @@
+schema: spec-driven
+
+# Project context
+context: |
+  Tech stack: Java 21, Spring Boot 3.3.1, Maven, JPA/Hibernate, H2/MySQL/PostgreSQL
+  Auth: JWT (auth0/java-jwt 4.4.0) + BCrypt, stateless, roles: DONO_RESTAURANTE + CLIENTE
+  API base: /API/V1/
+  Docs: Swagger (springdoc 2.3.0) at /swagger-ui.html
+  Build: mvnw (Maven Wrapper)
+  Database: 3 profiles (h2=default dev, mysql, postgre)
+  Domain: food ordering platform with restaurant owners and customers
+  Entities: Usuario, Restaurante, Produto, Pedido, ItemPedido, Pagamento
+  Language: Portuguese (BR) — code, comments, errors, and commits in PT-BR
+  Patterns: BeanUtils.copyProperties for DTO mapping, @ControllerAdvice for errors
+  Naming: REST endpoints in plural (/usuarios, /restaurantes), no versioning beyond API/V1
+
+# Per-artifact rules
+rules:
+  proposal:
+    - Write in Brazilian Portuguese
+    - Keep proposals concise, focused on a single change
+    - Always include scope, affected entities, and API changes
+    - Include BDD scenarios (Gherkin em PT-BR) for the main user stories
+    - Use Dado/Quando/Então pattern for scenarios
+  design:
+    - Describe entity relationship changes clearly
+    - Specify new endpoints with HTTP method and path
+    - Note any validation or security implications
+  tasks:
+    - Break tasks into small, testable chunks
+    - Each task should result in compilable code
+    - Include which files need modification
+  specs:
+    - One spec per capability (pedido, usuario, restaurante, produto, autenticacao)
+    - Cover API contracts, validation rules, and error scenarios
+    - Mention any state transitions (e.g., order status machine)
