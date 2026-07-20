@@ -1,0 +1,37 @@
+@startuml
+actor Garcom as G
+participant MesaController as CTRL
+participant ItemCompartilhadoService as SVC
+participant ProdutoRepository as PREPO
+participant ItemCompartilhadoRepository as ICREPO
+database "H2 Database" as DB
+
+G -> CTRL: POST /API/V1/mesas/1/compartilhados\n{\n  "produtoId": 3,\n  "quantidade": 1,\n  "tamanho": "INTEIRA"\n}
+activate CTRL
+
+CTRL -> SVC: adicionar(1L, requestDTO, usuarioLogado)
+activate SVC
+
+SVC -> SVC: validarMesa(1L, usuarioLogado)\n  (mesa existe e pertence ao restaurante do garçom)
+
+SVC -> PREPO: findById(3L)
+activate PREPO
+PREPO --> SVC: Produto(Refrigerante 2L, R$12.00)
+deactivate PREPO
+
+SVC -> SVC: new ItemCompartilhado(\n  mesa=mesa,\n  produto=refri,\n  quantidade=1,\n  precoUnitario=12.00,\n  tamanho=TamanhoPorcao.INTEIRA)
+
+SVC -> ICREPO: save(item)
+activate ICREPO
+ICREPO -> DB: INSERT INTO itens_compartilhados
+DB --> ICREPO: id gerado
+ICREPO --> SVC: item salvo com ID
+deactivate ICREPO
+
+SVC --> CTRL: ItemCompartilhadoResponseDTO
+deactivate SVC
+
+CTRL --> G: 201 Created\n{\n  "id": 1,\n  "produtoId": 3,\n  "nomeProduto": "Refrigerante 2L",\n  "quantidade": 1,\n  "precoUnitario": 12.00,\n  "tamanho": "INTEIRA"\n}
+deactivate CTRL
+
+@enduml
