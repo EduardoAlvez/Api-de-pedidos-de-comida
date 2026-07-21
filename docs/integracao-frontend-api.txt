@@ -1,0 +1,616 @@
+================================================================================
+GUIA DE INTEGRACAO FRONTEND
+Como o app deve chamar a API
+================================================================================
+
+SUMARIO
+  1. Autenticacao (token)
+  2. Listar Mesas
+  3. Listar Produtos
+  4. Itens Compartilhados (pool da mesa)
+  5. Como descobrir o restauranteId do GARCOM
+  6. Upload de Imagens
+  7. PIX (Pagamento via QR Code)
+  8. Exemplos Retrofit completos
+
+================================================================================
+1. AUTENTICACAO
+================================================================================
+
+Todas as requisicoes usam:
+  Header: Authorization: Bearer <token>
+
+O token e obtido via POST /login com email + senha:
+  Body: { "email": "garcom@email.com", "senha": "123456" }
+  Resposta: { "token": "eyJhbGciOiJIUzI1NiIs...", "type": "Bearer" }
+
+Armazenar com segurança (EncryptedSharedPreferences).
+
+================================================================================
+2. LISTAR MESAS
+================================================================================
+
+ENDPOINT:
+  GET /API/V1/mesas
+  Header: Authorization: Bearer <token>
+
+NAO PRECISA de restauranteId na URL, nem query param, nem body.
+O back-end descobre o restaurante do usuario logado automaticamente.
+
+Resposta (200 OK):
+  [
+    {
+      "id": 1,
+      "nomeCliente": "Joao",
+      "status": "OCUPADA",
+      "dataAbertura": "2026-07-12T20:00:00",
+      "restauranteId": 1,
+      "restauranteNome": "Sabor Brasileiro",
+      "itensCompartilhados": [
+        {
+          "id": 10,
+          "produtoId": 3,
+          "nomeProduto": "Porcao de Batata",
+          "quantidade": 2,
+          "precoUnitario": 25.00,
+          "observacao": "sem sal"
+        }
+      ]
+    }
+  ]
+
+Retorno possivel:
+  200 - Lista de mesas (pode ser vazia)
+  400 - Usuario nao vinculado a nenhum restaurante
+
+O campo `itensCompartilhados` contem os itens do pool compartilhado da mesa
+(nao estao vinculados a nenhuma comanda individual).
+
+================================================================================
+3. LISTAR PRODUTOS
+================================================================================
+
+ENDPOINT:
+  GET /API/V1/produtos/restaurante/{restauranteId}
+  Header: Authorization: Bearer <token>
+
+PRECISA do restauranteId como PATH PARAM (na URL).
+
+Exemplo:
+  GET /API/V1/produtos/restaurante/1
+
+Resposta (200 OK):
+  [
+    {
+      "id": 1,
+      "nome": "Feijoada",
+      "descricao": "Feijoada completa",
+      "preco": 35.90,
+      "precoMeia": 19.50,
+      "categoria": "Prato Principal",
+      "imageUrl": "https://...",
+      "disponivel": true
+    },
+    {
+      "id": 2,
+      "nome": "Refrigerante",
+      "descricao": "Lata 350ml",
+      "preco": 8.00,
+      "precoMeia": null,
+      "categoria": "Bebida",
+      "imageUrl": null,
+      "disponivel": true
+    }
+  ]
+
+Retorno possivel:
+  200 - Lista de produtos (pode ser vazia)
+  400 - Usuario nao vinculado a nenhum restaurante
+  404 - Restaurante nao encontrado (ou acesso negado)
+
+Para CLIENTE: qualquer restauranteId funciona (sem restricao).
+Para GARCOM/DONO: so funcionam restaurantes vinculados ao usuario.
+
+================================================================================
+4. ITENS COMPARTILHADOS (POOL DA MESA)
+================================================================================
+
+Itens compartilhados sao adicionados ao pool da mesa, nao a uma comanda
+especifica. Qualquer cliente na mesa pode ratear esses itens depois.
+
+4.1 ADICIONAR ITEM COMPARTILHADO
+
+  POST /API/V1/mesas/{mesaId}/compartilhados
+  Header: Authorization: Bearer <token>
+  Body:
+    {
+      "produtoId": 3,
+      "quantidade": 2,
+      "observacao": "sem sal",   // opcional
+      "tamanho": "INTEIRA"       // opcional, default "INTEIRA". Valores: "INTEIRA" | "MEIA"
+    }
+
+  Resposta (201 Created):
+    {
+      "id": 10,
+      "produtoId": 3,
+      "nomeProduto": "Porcao de Batata",
+      "quantidade": 2,
+      "precoUnitario": 25.00,
+      "observacao": "sem sal",
+      "tamanho": "INTEIRA"
+    }
+
+  Se `tamanho` for "MEIA", o `precoUnitario` usa o `precoMeia` do produto.
+  Se o produto nao tiver `precoMeia` → 400 Bad Request.
+
+  Retorno possivel:
+    201 - Item criado
+    404 - Mesa nao encontrada
+    404 - Produto nao encontrado
+
+4.2 LISTAR ITENS COMPARTILHADOS DA MESA
+
+  GET /API/V1/mesas/{mesaId}/compartilhados
+  Header: Authorization: Bearer <token>
+
+  Resposta (200 OK):
+    [
+      {
+        "id": 10,
+        "produtoId": 3,
+        "nomeProduto": "Porcao de Batata",
+        "quantidade": 2,
+        "precoUnitario": 25.00,
+        "observacao": "sem sal",
+        "tamanho": "INTEIRA"
+      }
+    ]
+
+  Retorno possivel:
+    200 - Lista de itens (pode ser vazia)
+
+4.3 ATUALIZAR ITEM COMPARTILHADO
+
+  PUT /API/V1/mesas/{mesaId}/compartilhados/{itemId}
+  Header: Authorization: Bearer <token>
+  Body (todos os campos sao opcionais):
+    {
+      "produtoId": 5,       // opcional — troca o produto
+      "quantidade": 3,      // opcional
+      "observacao": null,   // opcional — null limpa a observacao
+      "tamanho": "MEIA"     // opcional — altera o tamanho
+    }
+
+  Resposta (200 OK):
+    {
+      "id": 10,
+      "produtoId": 5,
+      "nomeProduto": "Batata Frita",
+      "quantidade": 3,
+      "precoUnitario": 22.00,
+      "observacao": null,
+      "tamanho": "MEIA"
+    }
+
+  Retorno possivel:
+    200 - Item atualizado
+    404 - Mesa ou item nao encontrado
+    404 - Produto nao encontrado (se produtoId foi alterado)
+
+4.4 REMOVER ITEM COMPARTILHADO
+
+  DELETE /API/V1/mesas/{mesaId}/compartilhados/{itemId}
+  Header: Authorization: Bearer <token>
+
+  Resposta (204 No Content)
+
+  Retorno possivel:
+    204 - Item removido
+    404 - Mesa ou item nao encontrado
+
+================================================================================
+5. COMO DESCOBRIR O RESTAURANTE DO GARCOM
+================================================================================
+
+O GARCOM precisa saber qual restauranteId usar em /produtos e /pedidos.
+A API nao tem um endpoint "meu-restaurante", mas tem 2 formas:
+
+FORMA A - Listar restaurantes apos login (RECOMENDADO)
+
+  GET /API/V1/restaurantes
+  Header: Authorization: Bearer <token>
+  Resposta: [
+    {
+      "id": 1,
+      "nome": "Sabor Brasileiro",
+      ...
+    }
+  ]
+
+  O GARCOM/DONO ve APENAS o restaurante vinculado a ele.
+  Salvar o id do restaurante em memoria/app apos o login.
+
+  Fluxo:
+    1. POST /login (email + senha) -> recebe token
+    2. GET /API/V1/restaurantes (com token) -> recebe lista com 1 restaurante
+    3. Salvar restaurante.id como "meuRestauranteId"
+    4. Usar esse id em GET /produtos/restaurante/{meuRestauranteId}
+
+FORMA B - Extrair do token JWT (alternativa)
+
+  O token JWT contem apenas o email do usuario (subject).
+  NAO contem restauranteId atualmente.
+  Teriamos que modificar o back-end para incluir.
+
+CONCLUSÃO: Use a FORMA A. E simples e funciona.
+
+================================================================================
+6. UPLOAD DE IMAGENS
+===============================================================================
+
+Upload de imagem para produtos e restaurantes.
+A imagem e salva no volume do Fly.io e servida estaticamente.
+
+6.1 UPLOAD IMAGEM DO PRODUTO
+
+  PUT /API/V1/produtos/{id}/imagem
+  Header: Authorization: Bearer <token>
+  Content-Type: multipart/form-data
+  Body: campo "imagem" com o arquivo (JPEG, PNG, WebP, max 5MB)
+
+  Resposta (200 OK):
+    {
+      "id": 11,
+      "nome": "Hamburguer",
+      "imageUrl": "/uploads/produtos/11.jpg",
+      ...
+    }
+
+  URL completa para exibir:
+    https://comanda-digital-api.fly.dev/uploads/produtos/{id}.jpg
+
+6.2 UPLOAD IMAGEM DO RESTAURANTE
+
+  PUT /API/V1/restaurantes/{id}/imagem
+  Header: Authorization: Bearer <token>
+  Content-Type: multipart/form-data
+  Body: campo "imagem" com o arquivo
+
+  Resposta (200 OK):
+    {
+      "id": 1,
+      "nome": "Sabor Brasileiro",
+      "imageUrl": "/uploads/restaurantes/1.jpg",
+      ...
+    }
+
+6.3 SERVIR IMAGENS (PUBLICO)
+
+  GET /uploads/{caminho}
+  Ex: GET /uploads/produtos/1.jpg → 200 + imagem
+       → 404 se nao existir
+
+  Nao precisa de token.
+  O campo imageUrl no response ja contem o path relativo.
+  O frontend concatena com a base URL.
+
+6.4 IMAGENS DE SEED (DEMO)
+
+  O DataLoader ja popula imageUrl com paths locais:
+    "/uploads/produtos/1.jpg" (Feijoada)
+    "/uploads/produtos/2.jpg" (Pizza)
+    ...
+    "/uploads/restaurantes/1.jpg" (Sabor Brasileiro)
+  As imagens ja estao no volume do Fly.io.
+
+===============================================================================
+7. PIX (PAGAMENTO VIA QR CODE)
+===============================================================================
+
+O PIX permite que o cliente pague a comanda via QR Code.
+O fluxo tem 2 etapas: gerar QR Code e depois fazer polling do status.
+
+7.1 GERAR QR CODE PIX
+
+  POST /API/V1/comandas/{id}/pix
+  Header: Authorization: Bearer <token>
+  Body: nenhum (sem corpo)
+
+  Resposta (201 Created):
+    {
+      "id": 1,
+      "comandaId": 7,
+      "valor": 50.00,
+      "qrCodeBase64": "iVBORw0KGgoAAAANSUhEUgA...",   ← imagem PNG em Base64
+      "payloadCopiaCola": "00020126580014br.gov.bcb.pix...", ← texto copia-e-cola
+      "txId": "123456789",
+      "status": "AGUARDANDO",
+      "dataCriacao": "2026-07-20T21:47:00",
+      "dataConfirmacao": null
+    }
+
+  Retorno possivel:
+    201 - QR Code gerado (status AGUARDANDO)
+    400 - Comanda ja esta paga
+    400 - Saldo zerado (ja foi totalmente rateada)
+    400 - PIX nao disponivel para este restaurante
+
+  Para exibir o QR Code no frontend:
+    <img src="data:image/png;base64,{qrCodeBase64}" />
+
+  Para copiar o codigo copia-e-cola:
+    Clique para copiar o texto de payloadCopiaCola
+
+7.2 CONSULTAR STATUS DO PIX (POLLING)
+
+  GET /API/V1/comandas/{id}/pix
+  Header: Authorization: Bearer <token>
+
+  Resposta (200 OK):
+    {
+      "id": 1,
+      "comandaId": 7,
+      "status": "CONFIRMADO",     ← AGUARDANDO | CONFIRMADO | EXPIROU
+      "dataConfirmacao": "2026-07-20T21:50:00",
+      ...
+    }
+
+  O frontend deve fazer polling a cada 5 segundos ate o status
+  mudar para CONFIRMADO ou EXPIROU.
+  Quando CONFIRMADO, o pagamento foi recebido e a comanda foi
+  fechada automaticamente.
+
+  Estados possiveis:
+    AGUARDANDO - Pagamento pendente (continuar polling)
+    CONFIRMADO - Pagamento confirmado (parar polling)
+    EXPIROU    - QR Code expirou (gerar novo)
+
+7.3 REGENERAR QR CODE EXPIROU
+
+  Se o status retornar EXPIROU, chame POST novamente:
+    POST /API/V1/comandas/{id}/pix
+
+  Isso gera um novo QR Code e substitui o anterior.
+
+7.4 OBSERVACOES IMPORTANTES
+
+  - O PIX e opcional por restaurante. Se o dono nao configurou
+    credenciais do Mercado Pago, o endpoint retorna 400.
+  - O frontend deve consultar o restaurante ANTES de exibir
+    a opcao PIX (se o dono configurou ou nao).
+  - O polling deve parar apos CONFIRMADO ou EXPIROU.
+  - O tempo medio de confirmacao e de 5 a 30 segundos.
+  - O QR Code em Base64 e uma imagem PNG de ~300x300 pixels.
+
+===============================================================================
+8. EXEMPLOS RETROFIT (KOTLIN)
+================================================================================
+
+--- Data classes de resposta ---
+
+data class ItemCompartilhadoResponse(
+    val id: Long,
+    val produtoId: Long,
+    val nomeProduto: String,
+    val quantidade: Int,
+    val precoUnitario: Double,
+    val observacao: String?,
+    val tamanho: String           // "INTEIRA" | "MEIA"
+)
+
+data class MesaResponse(
+    val id: Long,
+    val nomeCliente: String,
+    val status: String,        // "LIVRE" | "OCUPADA"
+    val dataAbertura: String,
+    val restauranteId: Long,
+    val restauranteNome: String,
+    val itensCompartilhados: List<ItemCompartilhadoResponse>
+)
+
+data class ItemCompartilhadoRequest(
+    val produtoId: Long,
+    val quantidade: Int,
+    val observacao: String? = null,
+    val tamanho: String? = "INTEIRA"   // "INTEIRA" | "MEIA"
+)
+
+data class ItemCompartilhadoUpdateRequest(
+    val produtoId: Long? = null,
+    val quantidade: Int? = null,
+    val observacao: String? = null,
+    val tamanho: String? = null
+)
+
+data class ProdutoResponse(
+    val id: Long,
+    val nome: String,
+    val descricao: String,
+    val preco: Double,
+    val precoMeia: Double?,
+    val categoria: String,
+    val imageUrl: String?,        // "/uploads/produtos/{id}.jpg"
+    val disponivel: Boolean
+)
+
+data class RestauranteResponse(
+    val id: Long,
+    val nome: String,
+    val endereco: String?,
+    val telefone: String?,
+    val tipoCozinha: String?,
+    val imageUrl: String?         // "/uploads/restaurantes/{id}.jpg"
+)
+
+data class PixResponse(
+    val id: Long,
+    val comandaId: Long,
+    val valor: Double,
+    val qrCodeBase64: String?,    // imagem PNG em Base64
+    val payloadCopiaCola: String?, // codigo copia-e-cola
+    val txId: String?,            // ID da transacao no Mercado Pago
+    val status: String,           // "AGUARDANDO" | "CONFIRMADO" | "EXPIROU"
+    val dataCriacao: String?,
+    val dataConfirmacao: String?
+)
+
+data class LoginRequest(val email: String, val senha: String)
+data class LoginResponse(val token: String, val type: String)
+
+--- Interface Retrofit ---
+
+interface ApiService {
+
+    @POST("login")
+    suspend fun login(@Body body: LoginRequest): Response<LoginResponse>
+
+    @GET("API/V1/restaurantes")
+    suspend fun listarRestaurantes(): Response<List<RestauranteResponse>>
+
+    @GET("API/V1/mesas")
+    suspend fun listarMesas(): Response<List<MesaResponse>>
+
+    @GET("API/V1/produtos/restaurante/{restauranteId}")
+    suspend fun listarProdutos(
+        @Path("restauranteId") restauranteId: Long
+    ): Response<List<ProdutoResponse>>
+
+    @POST("API/V1/mesas/{mesaId}/compartilhados")
+    suspend fun adicionarItemCompartilhado(
+        @Path("mesaId") mesaId: Long,
+        @Body body: ItemCompartilhadoRequest
+    ): Response<ItemCompartilhadoResponse>
+
+    @GET("API/V1/mesas/{mesaId}/compartilhados")
+    suspend fun listarItensCompartilhados(
+        @Path("mesaId") mesaId: Long
+    ): Response<List<ItemCompartilhadoResponse>>
+
+    @PUT("API/V1/mesas/{mesaId}/compartilhados/{itemId}")
+    suspend fun atualizarItemCompartilhado(
+        @Path("mesaId") mesaId: Long,
+        @Path("itemId") itemId: Long,
+        @Body body: ItemCompartilhadoUpdateRequest
+    ): Response<ItemCompartilhadoResponse>
+
+    @DELETE("API/V1/mesas/{mesaId}/compartilhados/{itemId}")
+    suspend fun removerItemCompartilhado(
+        @Path("mesaId") mesaId: Long,
+        @Path("itemId") itemId: Long
+    ): Response<Unit>
+
+    // PIX
+    @POST("API/V1/comandas/{id}/pix")
+    suspend fun gerarQrCodePix(
+        @Path("id") comandaId: Long
+    ): Response<PixResponse>
+
+    @GET("API/V1/comandas/{id}/pix")
+    suspend fun consultarStatusPix(
+        @Path("id") comandaId: Long
+    ): Response<PixResponse>
+
+    // UPLOAD DE IMAGENS
+    @Multipart
+    @PUT("API/V1/produtos/{id}/imagem")
+    suspend fun uploadImagemProduto(
+        @Path("id") produtoId: Long,
+        @Part imagem: MultipartBody.Part
+    ): Response<ProdutoResponse>
+
+    @Multipart
+    @PUT("API/V1/restaurantes/{id}/imagem")
+    suspend fun uploadImagemRestaurante(
+        @Path("id") restauranteId: Long,
+        @Part imagem: MultipartBody.Part
+    ): Response<RestauranteResponse>
+}
+
+--- Exemplo de uso no ViewModel ---
+
+class MainViewModel(private val api: ApiService) {
+
+    private var meuRestauranteId: Long? = null
+
+    fun login(email: String, senha: String) {
+        viewModelScope.launch {
+            val loginResponse = api.login(LoginRequest(email, senha))
+            if (loginResponse.isSuccessful) {
+                val token = loginResponse.body()!!.token
+                // Salvar token no EncryptedSharedPreferences
+
+                // Agora descobrir o restaurante do usuario
+                val restResponse = api.listarRestaurantes()
+                if (restResponse.isSuccessful) {
+                    val restaurantes = restResponse.body()!!
+                    if (restaurantes.isNotEmpty()) {
+                        meuRestauranteId = restaurantes.first().id
+                    }
+                }
+            }
+        }
+    }
+
+    fun listarMesas() {
+        viewModelScope.launch {
+            val response = api.listarMesas()
+            if (response.isSuccessful) {
+                val mesas = response.body()!!
+                // Cada mesa agora tem itensCompartilhados
+                // Atualizar UI com as mesas
+            }
+        }
+    }
+
+    fun listarProdutos() {
+        val restId = meuRestauranteId ?: return
+        viewModelScope.launch {
+            val response = api.listarProdutos(restId)
+            if (response.isSuccessful) {
+                val produtos = response.body()!!
+                // Atualizar UI com os produtos
+            }
+        }
+    }
+
+    fun adicionarItemCompartilhado(mesaId: Long, produtoId: Long, qtd: Int) {
+        viewModelScope.launch {
+            val response = api.adicionarItemCompartilhado(
+                mesaId, ItemCompartilhadoRequest(produtoId, qtd)
+            )
+            if (response.isSuccessful) {
+                val item = response.body()!!
+                // Atualizar UI — item adicionado ao pool da mesa
+            }
+        }
+    }
+}
+
+--- Configuracao Retrofit ---
+
+val retrofit = Retrofit.Builder()
+    .baseUrl("http://10.0.2.2:8080/")
+    .client(
+        OkHttpClient.Builder()
+            .addInterceptor { chain ->
+                val token = recuperarTokenSalvo()  // dos SharedPreferences
+                val request = if (token != null) {
+                    chain.request().newBuilder()
+                        .addHeader("Authorization", "Bearer $token")
+                        .build()
+                } else {
+                    chain.request()
+                }
+                chain.proceed(request)
+            }
+            .build()
+    )
+    .addConverterFactory(GsonConverterFactory.create())
+    .build()
+
+val api = retrofit.create(ApiService::class.java)
+
+================================================================================
+FIM
+================================================================================
