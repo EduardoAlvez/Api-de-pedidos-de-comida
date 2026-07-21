@@ -1,0 +1,355 @@
+====================================================================
+                     TRELLO — TODO O CONTEÚDO
+               Cola cada bloco no card correspondente
+====================================================================
+
+
+====================================================================
+COLUNA: A FAZER
+====================================================================
+
+
+--------------------------------------------------------------------
+CARD: Artigo - Introdução
+--------------------------------------------------------------------
+Descrição:
+Contextualizar o problema de delivery de comida e comanda digital. Apresentar o objetivo do trabalho: desenvolver uma API RESTful que atenda tanto delivery online quanto atendimento presencial, baseada no modelo real de comandas de um food court.
+
+Checklist:
+Problema e motivação
+Objetivos do trabalho
+Estrutura do artigo
+
+
+--------------------------------------------------------------------
+CARD: Artigo - Referencial Teórico
+--------------------------------------------------------------------
+Descrição:
+Fundamentação teórica sobre APIs REST, Spring Boot, JWT, arquitetura monolítica vs microsserviços, e boas práticas de desenvolvimento.
+
+Checklist:
+APIs RESTful
+Spring Boot e ecossistema Java
+Autenticação JWT
+Monolito vs microsserviços
+Testes automatizados (unitário, integração)
+
+
+--------------------------------------------------------------------
+CARD: Artigo - Metodologia
+--------------------------------------------------------------------
+Descrição:
+Descrever a abordagem spec-driven (OpenSpec), as ferramentas (Java 21, Spring Boot 3.3.1, Maven, opencode, JUnit 5, Mockito, REST Assured, Allure, JaCoCo) e o processo de desenvolvimento com AI-assisted coding.
+
+Checklist:
+Processo de desenvolvimento (spec-driven)
+Ferramentas e tecnologias
+Métricas de qualidade (testes, cobertura)
+Uso de IA na geração de testes
+
+
+--------------------------------------------------------------------
+CARD: Artigo - Desenvolvimento
+--------------------------------------------------------------------
+Descrição:
+Descrever detalhes da implementação: modelagem do banco, autenticação JWT, CRUDs, frete dinâmico por região, comanda digital com rateio de itens compartilhados.
+
+Checklist:
+Modelagem do banco de dados
+Autenticação JWT + BCrypt
+CRUD de usuários e restaurantes
+Sistema de pedidos com frete dinâmico
+Comanda digital com rateio
+Testes automatizados
+
+
+--------------------------------------------------------------------
+CARD: Artigo - Testes e Qualidade
+--------------------------------------------------------------------
+Descrição:
+Descrever a suíte de 36 testes (18 unitários + 18 integração), Allure para relatórios de comportamento, JaCoCo para cobertura, e branch QA.
+
+Checklist:
+Estratégia de testes (unitário vs integração)
+Resultados de cobertura (JaCoCo)
+Relatórios de comportamento (Allure)
+Branch QA
+
+
+--------------------------------------------------------------------
+CARD: Artigo - Resultados
+--------------------------------------------------------------------
+Descrição:
+Analisar os resultados obtidos: cobertura de testes, desafios encontrados, decisões técnicas e limitações do projeto.
+
+Checklist:
+Análise dos resultados
+Descobertas e desafios
+Limitações do projeto
+
+
+--------------------------------------------------------------------
+CARD: Artigo - Conclusão
+--------------------------------------------------------------------
+Descrição:
+Síntese dos resultados alcançados, contribuições do trabalho e sugestões para trabalhos futuros.
+
+Checklist:
+Síntese dos resultados
+Contribuições
+Trabalhos futuros
+
+
+--------------------------------------------------------------------
+CARD: Feature - Meia Porção + TipoConsumo
+--------------------------------------------------------------------
+Descrição:
+Implementar meia porção com preço definido pelo restaurante (precoMeia no Produto) e tipo de consumo (COMER_AQUI / VIA) nos pedidos presenciais. Baseado no modelo real de comandas do food court.
+
+Checklist:
+Criar enums TamanhoPorcao e TipoConsumo
+Adicionar precoMeia no Produto
+Adicionar tamanho no ItemPedido
+Adicionar tipoConsumo no Pedido
+Atualizar DTOs
+Atualizar lógica de precificação
+Escrever testes
+
+
+--------------------------------------------------------------------
+CARD: Feature - Docker Funcional
+--------------------------------------------------------------------
+Descrição:
+Ajustar Docker e docker-compose para funcionar corretamente com PostgreSQL.
+
+Checklist:
+Ajustar Dockerfile
+Ajustar docker-compose.yml
+Testar com perfil postgre
+
+
+--------------------------------------------------------------------
+CARD: Feature - Observações por Item
+--------------------------------------------------------------------
+Descrição:
+Adicionar campo de observação em cada ItemPedido (ex: "Charque magra") para permitir que o cliente especifique preferências no preparo.
+
+Checklist:
+Adicionar campo observacao no ItemPedido entity
+Adicionar campo observacao nos DTOs
+Atualizar serviço
+Escrever testes
+
+
+--------------------------------------------------------------------
+CARD: App Android - Tela de Login
+--------------------------------------------------------------------
+Descrição:
+Tela inicial do app do garçom. Login com e-mail e senha, chama POST /login, recebe token JWT e salva localmente.
+
+Checklist:
+Criar tela com campos de e-mail e senha
+Implementar chamada à API de login
+Salvar token JWT (SharedPreferences)
+Redirecionar para Dashboard após login
+
+
+--------------------------------------------------------------------
+CARD: App Android - Dashboard (Lista de Mesas)
+--------------------------------------------------------------------
+Descrição:
+Tela principal após login. Lista todas as mesas do restaurante via GET /API/V1/mesas?restauranteId=X. Cada mesa mostra nome do cliente, status (LIVRE/OCUPADA). Botão "Abrir Mesa".
+
+Checklist:
+Implementar RecyclerView com lista de mesas
+Exibir status com ícone/ cor (verde LIVRE, vermelho OCUPADA)
+Botão flutuante para abrir nova mesa
+Ação de clique abre tela de comandas da mesa
+
+
+--------------------------------------------------------------------
+CARD: App Android - Abrir Mesa
+--------------------------------------------------------------------
+Descrição:
+Tela para criar nova mesa. Campo de nome do cliente. Chama POST /API/V1/mesas.
+
+Checklist:
+Campo de texto para nome do cliente
+Validação (nome não pode estar vazio)
+Chamar API de criação
+Voltar para Dashboard com mesa atualizada
+
+
+--------------------------------------------------------------------
+CARD: App Android - Lista de Comandas da Mesa
+--------------------------------------------------------------------
+Descrição:
+Exibe todas as comandas de uma mesa via GET /API/V1/comandas?mesaId=X. Cada comanda: nome do cliente, status, valor total. Botão "Nova Comanda".
+
+Checklist:
+RecyclerView com comandas
+Exibir nome cliente, status e valor
+Botão de nova comanda
+Clique na comanda abre detalhes
+
+
+--------------------------------------------------------------------
+CARD: App Android - Criar Comanda
+--------------------------------------------------------------------
+Descrição:
+Cria nova comanda para um cliente na mesa. Campos: nome do cliente + seleção de itens do cardápio. Cada item: produto, quantidade, compartilhado (checkbox). Chama POST /API/V1/mesas/{mesaId}/comandas.
+
+Checklist:
+Campo nome do cliente
+Lista de produtos (via API de produtos)
+Selecionar quantidade
+Checkbox "compartilhado" para cada item
+Chamar API de criação
+Voltar para lista de comandas
+
+
+--------------------------------------------------------------------
+CARD: App Android - Detalhes da Comanda
+--------------------------------------------------------------------
+Descrição:
+Mostra detalhes completos da comanda: nome cliente, garçom, status, data, lista de itens (com ícone 🔗 se compartilhado), lista de rateios, valor total. Botões: Adicionar Item, Ratear, Fechar.
+
+Checklist:
+Exibir cabeçalho (cliente, garçom, status, data)
+RecyclerView de itens com indicação de compartilhado
+RecyclerView de rateios
+Valor total em destaque
+Botões de ação (adicionar item, ratear, fechar)
+
+
+--------------------------------------------------------------------
+CARD: App Android - Adicionar Item na Comanda
+--------------------------------------------------------------------
+Descrição:
+Adiciona um novo item a uma comanda existente. Lista produtos do restaurante com nome e preço. Seleciona quantidade e se é compartilhado.
+
+Checklist:
+Lista de produtos (GET /API/V1/produtos/restaurante/{id})
+Selecionar quantidade
+Checkbox compartilhado
+Confirmar e voltar
+
+
+--------------------------------------------------------------------
+CARD: App Android - Tela de Rateio
+--------------------------------------------------------------------
+Descrição:
+Para itens compartilhados: seleciona o produto e digita o valor que este cliente está pagando. Chama POST /API/V1/comandas/{id}/rateio.
+
+Checklist:
+Selecionar produto compartilhado
+Campo de valor pago
+Validação (valor positivo, não excede saldo)
+Chamar API de rateio
+Atualizar tela de detalhes
+
+
+--------------------------------------------------------------------
+CARD: App Android - Fechar Comanda
+--------------------------------------------------------------------
+Descrição:
+Confirma o fechamento da comanda. Chama POST /API/V1/comandas/{id}/fechar. Mostra feedback de sucesso ou erro.
+
+Checklist:
+Diálogo de confirmação
+Chamar API de fechamento
+Feedback de sucesso/ erro
+Voltar para lista de comandas
+
+
+====================================================================
+COLUNA: CONCLUÍDO
+====================================================================
+
+
+--------------------------------------------------------------------
+CARD: Setup Inicial
+--------------------------------------------------------------------
+Descrição:
+Criação do projeto Spring Boot 3.3.1, autenticação JWT + BCrypt, CRUD de usuários (DONO_RESTAURANTE, CLIENTE), restaurantes, produtos e pedidos, tratamento global de exceções, Swagger, 3 perfis de banco (H2, MySQL, PostgreSQL).
+
+Checklist:
+Spring Boot 3.3.1 com Java 21
+Autenticação JWT + BCrypt
+CRUD Usuários
+CRUD Restaurantes
+CRUD Produtos
+CRUD Pedidos
+Tratamento global de exceções
+Swagger/OpenAPI
+Perfis H2, MySQL, PostgreSQL
+
+
+--------------------------------------------------------------------
+CARD: Frete Dinâmico
+--------------------------------------------------------------------
+Descrição:
+Sistema de regiões de entrega com taxa fixa por região. Cada restaurante define suas regiões de entrega com nome, raio e valor do frete, calculado no momento do pedido.
+
+Checklist:
+Entidade RegiaoEntrega
+CRUD regiões de entrega
+Integração com cálculo do pedido
+Validação de pertinência ao restaurante
+
+
+--------------------------------------------------------------------
+CARD: Comanda Digital
+--------------------------------------------------------------------
+Descrição:
+Implementação do atendimento presencial: role GARCOM, entidades Mesa e Comanda, rateio de itens compartilhados, fechamento individual de comandas, OrigemPedido (DELIVERY / PRESENCIAL).
+
+Checklist:
+Role GARCOM
+Entidade Mesa (LIVRE / OCUPADA)
+Entidade Comanda (ABERTA / FECHADA / PAGA)
+Rateio de itens compartilhados
+Fechamento individual
+OrigemPedido (DELIVERY / PRESENCIAL)
+Liberação automática da mesa
+
+
+--------------------------------------------------------------------
+CARD: Testes Automatizados
+--------------------------------------------------------------------
+Descrição:
+36 testes no total (18 unitários + 18 integração) com JUnit 5, Mockito, REST Assured, Spring MockMvc. Branch QA dedicada.
+
+Checklist:
+Testes unitários de serviço (Comanda, Mesa, Pedido, RegiaoEntrega)
+Testes de integração de controllers (Comanda, Mesa, Pedido, Autenticação)
+Testes de segurança (JWT, rotas protegidas)
+Testes de contexto
+
+
+--------------------------------------------------------------------
+CARD: Metadados Allure
+--------------------------------------------------------------------
+Descrição:
+Adição de @Feature, @Severity, @Step, @Attachment em todos os 36 testes para relatórios de comportamento.
+
+Checklist:
+@Feature em classes de teste
+@Severity por cenário
+@Step em métodos auxiliares
+@Attachment para payloads JSON
+
+
+--------------------------------------------------------------------
+CARD: README Completo
+--------------------------------------------------------------------
+Descrição:
+README do projeto com funcionalidades, endpoints, stack tecnológica, testes, perfis de banco e branch strategy.
+
+Checklist:
+Funcionalidades
+Endpoints documentados
+Stack tecnológica
+Como executar
+Testes
+Branch strategy

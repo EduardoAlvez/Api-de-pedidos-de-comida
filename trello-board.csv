@@ -1,0 +1,18 @@
+List,Card Name,Labels
+A Fazer,Artigo - Introdução,artigo
+A Fazer,Artigo - Referencial Teórico,artigo
+A Fazer,Artigo - Metodologia,artigo
+A Fazer,Artigo - Desenvolvimento,artigo;codigo
+A Fazer,Artigo - Testes e Qualidade,artigo;teste
+A Fazer,Artigo - Resultados,artigo
+A Fazer,Artigo - Conclusão,artigo
+A Fazer,Feature - Meia Porção + TipoConsumo,codigo
+A Fazer,Feature - Docker Funcional,codigo
+A Fazer,Feature - Observações por Item,codigo
+Em Andamento,(nenhum no momento),
+Concluído,Setup Inicial,codigo
+Concluído,Frete Dinâmico,codigo
+Concluído,Comanda Digital,codigo
+Concluído,Testes Automatizados,teste;codigo
+Concluído,Metadados Allure,teste
+Concluído,README Completo,artigo;codigo
