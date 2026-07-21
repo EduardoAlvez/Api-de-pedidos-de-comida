@@ -24,6 +24,8 @@ public class Mesa {
 
     private String nomeCliente;
 
+    private Integer numero;
+
     @Enumerated(EnumType.STRING)
     private StatusMesa status;
 

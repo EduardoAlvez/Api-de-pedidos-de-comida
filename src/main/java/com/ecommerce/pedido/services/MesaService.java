@@ -49,8 +49,17 @@ public class MesaService {
             throw new AcessoRestauranteException("Acesso negado: voce nao pode criar mesas em outro restaurante.");
         }
 
+        if (requestDTO.getNumero() != null) {
+            if (mesaRepository.existsByRestaurante_IdAndNumero(
+                    restauranteVinculado.getId(), requestDTO.getNumero())) {
+                throw new ValidacaoNegocioException(
+                        "Número de mesa já em uso neste restaurante: " + requestDTO.getNumero());
+            }
+        }
+
         Mesa mesa = new Mesa();
         mesa.setNomeCliente(requestDTO.getNomeCliente());
+        mesa.setNumero(requestDTO.getNumero());
         mesa.setStatus(StatusMesa.LIVRE);
         mesa.setDataAbertura(LocalDateTime.now());
         mesa.setRestaurante(restauranteVinculado);
@@ -85,6 +94,15 @@ public class MesaService {
                 .orElseThrow(() -> new RestauranteNaoEncontradoException("Mesa não encontrada com o ID: " + id));
         validarAcessoRestaurante(mesa.getRestaurante().getId(), usuarioLogado);
         mesa.setNomeCliente(requestDTO.getNomeCliente());
+        if (requestDTO.getNumero() != null) {
+            Mesa mesaComNumero = mesaRepository.findByRestaurante_IdAndNumero(
+                    mesa.getRestaurante().getId(), requestDTO.getNumero()).orElse(null);
+            if (mesaComNumero != null && !mesaComNumero.getId().equals(id)) {
+                throw new ValidacaoNegocioException(
+                        "Número de mesa já em uso neste restaurante: " + requestDTO.getNumero());
+            }
+            mesa.setNumero(requestDTO.getNumero());
+        }
         return toResponseDTO(mesaRepository.save(mesa));
     }
 
@@ -138,6 +156,7 @@ public class MesaService {
         MesaResponseDTO response = new MesaResponseDTO();
         response.setId(mesa.getId());
         response.setNomeCliente(mesa.getNomeCliente());
+        response.setNumero(mesa.getNumero());
         response.setStatus(mesa.getStatus());
         response.setDataAbertura(mesa.getDataAbertura());
         if (mesa.getRestaurante() != null) {
