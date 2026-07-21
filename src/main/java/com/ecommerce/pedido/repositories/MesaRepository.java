@@ -12,4 +12,8 @@ public interface MesaRepository extends JpaRepository<Mesa, Long> {
     List<Mesa> findAllByRestaurante_Id(Long restauranteId);
 
     boolean existsByRestaurante_IdAndStatus(Long restauranteId, com.ecommerce.pedido.models.enums.StatusMesa status);
+
+    boolean existsByRestaurante_IdAndNumero(Long restauranteId, Integer numero);
+
+    java.util.Optional<Mesa> findByRestaurante_IdAndNumero(Long restauranteId, Integer numero);
 }

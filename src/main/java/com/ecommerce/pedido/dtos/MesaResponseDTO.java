@@ -13,6 +13,7 @@ public class MesaResponseDTO {
 
     private Long id;
     private String nomeCliente;
+    private Integer numero;
     private StatusMesa status;
     private LocalDateTime dataAbertura;
     private Long restauranteId;

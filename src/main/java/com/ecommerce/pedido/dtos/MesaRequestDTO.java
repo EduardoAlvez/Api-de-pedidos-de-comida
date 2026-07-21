@@ -14,4 +14,6 @@ public class MesaRequestDTO {
 
     @NotBlank(message = "O nome do cliente é obrigatório.")
     private String nomeCliente;
+
+    private Integer numero;
 }
