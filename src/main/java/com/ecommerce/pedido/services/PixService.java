@@ -125,7 +125,13 @@ public class PixService {
             throw new ValidacaoAssinaturaException("Assinatura do webhook inválida.");
         }
 
-        if (payload.getAction() == null || !payload.getAction().equals("order.processed")) {
+        if (payload.getAction() == null) {
+            return;
+        }
+        if (!payload.getAction().equals("order.processed")
+                && !payload.getAction().equals("payment.updated")
+                && !payload.getAction().equals("payment.created")) {
+            log.warn("Acao de webhook nao reconhecida: {}", payload.getAction());
             return;
         }
 
